@@ -1,8 +1,6 @@
 #!/bin/bash
 
 #TODO: Documentation
-#TODO: Add informative output messages
-#TODO: Depth as parameter
 
 #Parameters
 email=$1
