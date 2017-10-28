@@ -2,8 +2,6 @@
 
 #TODO: Documentation
 
-# $1: email to encrypt for
-# $2: path to directory
 function checkFiles {
     local email=$1
     local path=$2

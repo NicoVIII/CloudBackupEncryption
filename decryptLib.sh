@@ -2,19 +2,16 @@
 
 #TODO: Documentation
 
-#Use flag -u to unzip archives automatically
-
 #Check flags
 unzip=0
 while getopts ":u" opt; do
-  case $opt in
-    u)
-      unzip=1
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      ;;
-  esac
+    case $opt in
+        u)
+            unzip=1;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1;;
+    esac
 done
 
 mkdir "../decrypted"
@@ -31,5 +28,8 @@ do
     gpg --output "../decrypted/$zip" --decrypt "$j"
 	if [ $unzip = 1 ] && [[ $zip == *.zip ]]; then
 		unzip "../decrypted/$zip" -d "../decrypted/$dir"
+        rm "../decrypted/$zip"
 	fi
 done
+echo "Finished decrypting!"
+exit 0
