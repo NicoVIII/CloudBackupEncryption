@@ -8,7 +8,11 @@ function checkFiles {
 
     find $path -maxdepth 1 -type f | while read i
     do
-        gpg --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
+        if [[ $i != *decrypt.sh ]] && [[ $i != *decryptLib.sh ]]; then
+            gpg --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
+        else
+            cp "$i" "../backup/$i"
+        fi
     done
 }
 
