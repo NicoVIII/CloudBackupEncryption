@@ -1,4 +1,8 @@
 # CloudBackupEncryption
+[![GitHub release](https://img.shields.io/github/release/NicoVIII/CloudBackupEncryption.svg)]()
+[![Github Releases](https://img.shields.io/github/downloads/NicoVIII/CloudBackupEncryption/total.svg)]()
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
+
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
 
 ## Usage
