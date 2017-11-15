@@ -4,6 +4,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
+Because this project contains out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
 
 ## Usage
 1. Put all three `.sh` files into the folder which contents you want to encrypt.
