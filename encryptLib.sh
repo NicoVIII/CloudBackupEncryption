@@ -21,8 +21,6 @@ function handleDir {
     local email=$2
     local path=$3
 
-    echo "Handle dir: $path"
-
     # Create necessary folders
     if [ $path == "." ]; then
         mkdir "../backup"
@@ -43,12 +41,9 @@ function handleDir {
         else
             local oldPath=$PWD
             cd "$path"
-            echo "Now in: $path"
-            echo "Try to zip: $i"
             folder=$(basename "$i")
-            zip -r "$oldPath/../tmp/$i.zip" "./$folder"
+            zip -r "$oldPath/../tmp/$i.zip" "./$folder" > /dev/null
             cd "$oldPath"
-            echo "Now in: $oldPath"
             gpg --output "../backup/$i.zip.gpg" --encrypt --recipient $email "../tmp/$i.zip"
         fi
     done
