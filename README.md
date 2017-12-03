@@ -7,10 +7,17 @@ This project intends to provide tools for users to easily encrypt a filestructur
 Because this project contains out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
 
 ## Usage
-1. Put all three `.sh` files into the folder which contents you want to encrypt.
+
+### Encryption
+1. Put all four `.sh` files into the folder which contents you want to encrypt.
 2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
 3. Also replace `<depth>` with the depth you wish for zipping directories. Depth 0 zipps all directories in the folder the script is in.
-4. Make `encrypt.sh` executable and execute it. It will start the encryption. All zipped folders are placed inside a `tmp` folder next to the folder with the files and the final backup inside a `backup` folder next to the folder with the files.
+4. You should configure decrypt in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decryptLib](#decryptlib)
+5. Make `encrypt.sh` and `encryptLib.sh` executable and execute `encrypt.sh`. It will start the encryption. All zipped folders are placed inside a `tmp` folder next to the folder with the files and the final backup inside a `backup` folder next to the folder with the files.
+
+### Decryption
+1. The files `decrypt.sh` and `decryptLib.sh` should not be encrypted. Make them executable in the backup you created.
+2. Execute `decrypt.sh`.
 
 ## Options
 These are the options and flags you can use with the files and insert into `encrypt.sh` and `decrypt.sh`.
