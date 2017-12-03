@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#
+# CloudBackupEncryption v0.1.0 - Decryption Library
+#
+
 #TODO: Documentation
 
 #Check flags

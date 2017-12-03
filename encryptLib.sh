@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#
+# CloudBackupEncryption v0.1.0 - Encryption Library
+#
+
 #TODO: Documentation
 
 function checkFiles {
