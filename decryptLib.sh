@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# CloudBackupEncryption v0.1.0 - Decryption Library
+# CloudBackupEncryption v0.1.1 - Decryption Library
 #
 
 #TODO: Documentation
