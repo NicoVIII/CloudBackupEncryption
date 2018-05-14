@@ -1,4 +1,4 @@
-# CloudBackupEncryption
+# PGP-Backup
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![GitHub release](https://img.shields.io/github/release/NicoVIII/CloudBackupEncryption.svg)]()
 [![Github Releases](https://img.shields.io/github/downloads/NicoVIII/CloudBackupEncryption/total.svg)]()
@@ -55,7 +55,7 @@ folder
 #### No Depth
 With the following `encrypt.sh`:
 ```
-encryptLib.sh example@example.com
+pgpbackup-encrypt example@example.com
 ```
 The encrypted filestructure looks like this:
 ```
@@ -75,7 +75,7 @@ folder
 #### Depth: 0
 With the following `encrypt.sh`:
 ```
-encryptLib.sh -d 0 example@example.com
+pgpbackup-encrypt -d 0 example@example.com
 ```
 The encrypted filestructure looks like this:
 ```
@@ -87,7 +87,7 @@ folder
 #### Depth: 1
 With the following `encrypt.sh`:
 ```
-encryptLib.sh -d 1 example@example.com
+pgpbackup-encrypt -d 1 example@example.com
 ```
 The encrypted filestructure looks like this:
 ```

@@ -2,8 +2,8 @@
 
 #TODO: Documentation
 
-progname="CloudBackupEncryption"
-libname="Encryption Library"
+progname="PGP-Backup"
+libname="Encryption"
 version="v0.1.1"
 
 function checkFiles {
@@ -12,7 +12,7 @@ function checkFiles {
 
     find $path -maxdepth 1 -type f | while read i
     do
-        if [[ $i != *decrypt.sh ]] && [[ $i != *decryptLib.sh ]]; then
+        if [[ $i != *decrypt.sh ]] && [[ $i != *pgpbackup-decrypt ]]; then
             gpg --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
         else
             cp "$i" "../backup/$i"
@@ -63,7 +63,7 @@ while getopts ":d:h:v" opt; do
             #TODO: check for int
             depth=$OPTARG;;
         h)
-            echo "Usage: encryptLib.sh [-d depth]... email"
+            echo "Usage: pgpbackup-encrypt [-d depth] email"
             exit 0;;
         v)
             echo $progname "-" $libname

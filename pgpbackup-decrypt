@@ -2,16 +2,19 @@
 
 #TODO: Documentation
 
-progname="CloudBackupEncryption"
-libname="Decryption Library"
+progname="PGP-Backup"
+libname="Decryption"
 version="v0.1.1"
 
 #Check flags
 unzip=0
-while getopts ":u:v" opt; do
+while getopts ":u:h:v" opt; do
     case $opt in
         u)
             unzip=1;;
+        h)
+            echo "Usage: pgpbackup-decrypt [-u]"
+            exit 0;;
         v)
             echo $progname "-" $libname
             echo $version
