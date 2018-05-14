@@ -13,7 +13,7 @@ function checkFiles {
     find $path -maxdepth 1 -type f | while read i
     do
         if [[ $i != *decrypt.sh ]] && [[ $i != *pgpbackup-decrypt ]]; then
-            gpg --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
+            gpg -q --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
         else
             cp "$i" "../backup/$i"
         fi
@@ -50,7 +50,7 @@ function handleDir {
             folder=$(basename "$i")
             zip -r "$oldPath/../tmp/$i.zip" "./$folder" > /dev/null
             cd "$oldPath"
-            gpg --output "../backup/$i.zip.gpg" --encrypt --recipient $email "../tmp/$i.zip"
+            gpg -q --output "../backup/$i.zip.gpg" --encrypt --recipient $email "../tmp/$i.zip"
         fi
     done
 }

@@ -38,7 +38,7 @@ find . -depth -type f -iname "*.gpg" | while read j
 do
 	zip=${j::-4}
 	dir=$(dirname "$zip")
-    gpg --output "../decrypted/$zip" --decrypt "$j"
+    gpg -q --output "../decrypted/$zip" --decrypt "$j"
 	if [ $unzip = 1 ] && [[ $zip == *.zip ]]; then
 		unzip "../decrypted/$zip" -d "../decrypted/$dir" > /dev/null
         rm "../decrypted/$zip"
