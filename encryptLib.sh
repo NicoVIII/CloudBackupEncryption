@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#
-# CloudBackupEncryption v0.1.1 - Encryption Library
-#
-
 #TODO: Documentation
+
+progname="CloudBackupEncryption"
+libname="Encryption Library"
+version="v0.1.1"
 
 function checkFiles {
     local email=$1
@@ -57,13 +57,17 @@ function handleDir {
 
 #Check flags
 depth=-1
-while getopts ":d:h" opt; do
+while getopts ":d:h:v" opt; do
     case $opt in
         d)
             #TODO: check for int
             depth=$OPTARG;;
         h)
             echo "Usage: encryptLib.sh [-d depth]... email"
+            exit 0;;
+        v)
+            echo $progname "-" $libname
+            echo $version
             exit 0;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -74,6 +78,8 @@ while getopts ":d:h" opt; do
     esac
 done
 shift $(($OPTIND - 1))
+
+echo $progname $version "-" $libname
 
 #Parameters
 if [ $# -ne 1 ]; then
