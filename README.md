@@ -4,7 +4,11 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
-Because this project contains out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
+Because this project consists out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
+
+## Dependencies
+For this scripts to run approprietly you need a working gpg setup. The scripts call gpg to decrypt or encrypt, so you need an existing keypair for given email address.
+The commands zip and unzip are called as well, so these must be accessible too. For most linux distributions this is given per default, as far as I know.
 
 ## Usage
 
