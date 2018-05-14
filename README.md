@@ -15,7 +15,7 @@ The commands zip and unzip are called as well, so these must be accessible too. 
 ### Encryption
 1. Put all four `.sh` files into the folder which contents you want to encrypt.
 2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
-3. Also replace `<depth>` with the depth you wish for zipping directories. Depth 0 zipps all directories in the folder the script is in.
+3. If you want to zip your directories, add `-d <depth>` with `<depth>` as the depth you wish for zipping directories. Depth 0 zipps all directories in the folder the script is in.
 4. You should configure decrypt in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decryptLib](#decryptlib)
 5. Make `encrypt.sh` and `encryptLib.sh` executable and execute `encrypt.sh`. It will start the encryption. All zipped folders are placed inside a `tmp` folder next to the folder with the files and the final backup inside a `backup` folder next to the folder with the files.
 
@@ -31,3 +31,69 @@ These are the options and flags you can use with the files and insert into `encr
 
 ### decryptLib
 -u : unzippes all decrypted archives
+
+## Examples
+
+### Example 1
+
+Given following file structure:
+```
+folder
+|  file1.file
+|
+|__folder1
+   |  file2.file
+   |
+   |__folder2
+   |  | file3.file
+   |
+   |__folder3
+      | file4.file
+```
+
+#### No Depth
+With the following `encrypt.sh`:
+```
+encryptLib.sh example@example.com
+```
+The encrypted filestructure looks like this:
+```
+folder
+|  file1.file.gpg
+|
+|__folder1
+   |  file2.file.gpg
+   |
+   |__folder2
+   |  | file3.file.gpg
+   |
+   |__folder3
+      | file4.file.gpg
+```
+
+#### Depth: 0
+With the following `encrypt.sh`:
+```
+encryptLib.sh -d 0 example@example.com
+```
+The encrypted filestructure looks like this:
+```
+folder
+|  file1.file.gpg
+|  folder1.zip.gpg
+```
+
+#### Depth: 1
+With the following `encrypt.sh`:
+```
+encryptLib.sh -d 1 example@example.com
+```
+The encrypted filestructure looks like this:
+```
+folder
+|  file1.file.gpg
+|
+|__folder1
+   |  file2.file.gpg
+   |  folder2.zip.gpg
+```

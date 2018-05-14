@@ -42,6 +42,8 @@ function handleDir {
     do
         if [ $depth -gt 0 ]; then
             handleDir $[$depth-1] $email $i
+        elif [ $depth -lt 0 ]; then
+            handleDir $depth $email $i
         else
             local oldPath=$PWD
             cd "$path"
@@ -54,7 +56,7 @@ function handleDir {
 }
 
 #Check flags
-depth=0
+depth=-1
 while getopts ":d:h" opt; do
     case $opt in
         d)
