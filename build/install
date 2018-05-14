@@ -1,0 +1,2 @@
+pgpbackup-decrypt usr/bin
+pgpbackup-encrypt usr/bin
