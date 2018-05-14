@@ -1,7 +1,7 @@
 # PGP-Backup
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![GitHub release](https://img.shields.io/github/release/NicoVIII/CloudBackupEncryption.svg)]()
-[![Github Releases](https://img.shields.io/github/downloads/NicoVIII/CloudBackupEncryption/total.svg)]()
+[![GitHub release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)]()
+[![Github Releases](https://img.shields.io/github/downloads/NicoVIII/PGP-Backup/total.svg)]()
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
@@ -11,6 +11,10 @@ Because this project consists out of batch scripts, it will only work on Linux s
 For this scripts to run approprietly you need a working gpg setup. The scripts call gpg to decrypt or encrypt, so you need an existing keypair for given email address.
 The commands zip and unzip are called as well, so these must be accessible too. For most linux distributions this is given per default, as far as I know.
 
+## Installation
+There are two ways of using these script. You can either use them as portable scripts or install them on your machine normally via a `.deb` package. You can download this package on the [release page on github](https://github.com/NicoVIII/PGP-Backup/releases).
+If you install the `.deb` package, you do not need the scripts `pgpbackup-encrypt` and `pgpbackup-decrypt`.
+
 ## Usage
 
 ### Encryption
@@ -18,10 +22,10 @@ The commands zip and unzip are called as well, so these must be accessible too. 
 2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
 3. If you want to zip your directories, add `-d <depth>` with `<depth>` as the depth you wish for zipping directories. Depth 0 zipps all directories in the folder the script is in.
 4. You should configure decrypt in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decryptLib](#decryptlib)
-5. Make `encrypt.sh` and `encryptLib.sh` executable and execute `encrypt.sh`. It will start the encryption. All zipped folders are placed inside a `tmp` folder next to the folder with the files and the final backup inside a `backup` folder next to the folder with the files.
+5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. All zipped folders are placed inside a `tmp` folder next to the folder with the files and the final backup inside a `backup` folder next to the folder with the files.
 
 ### Decryption
-1. The files `decrypt.sh` and `decryptLib.sh` should not be encrypted. Make them executable in the backup you created.
+1. The files `decrypt.sh` and (if exists) `pgpbackup-decrypt` should not be encrypted. Make them executable in the backup you created.
 2. Execute `decrypt.sh`.
 
 ## Options
@@ -55,7 +59,7 @@ folder
 #### No Depth
 With the following `encrypt.sh`:
 ```
-pgpbackup-encrypt example@example.com
+exec $ENCRYPT example@example.com
 ```
 The encrypted filestructure looks like this:
 ```
@@ -75,7 +79,7 @@ folder
 #### Depth: 0
 With the following `encrypt.sh`:
 ```
-pgpbackup-encrypt -d 0 example@example.com
+exec $ENCRYPT -d 0 example@example.com
 ```
 The encrypted filestructure looks like this:
 ```
@@ -87,7 +91,7 @@ folder
 #### Depth: 1
 With the following `encrypt.sh`:
 ```
-pgpbackup-encrypt -d 1 example@example.com
+exec $ENCRYPT -d 1 example@example.com
 ```
 The encrypted filestructure looks like this:
 ```

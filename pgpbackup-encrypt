@@ -10,9 +10,9 @@ function checkFiles {
     local email=$1
     local path=$2
 
-    find $path -maxdepth 1 -type f | while read i
+    find "$path" -maxdepth 1 -type f | while read i
     do
-        if [[ $i != *decrypt.sh ]] && [[ $i != *pgpbackup-decrypt ]]; then
+        if [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             gpg -q --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
         else
             cp "$i" "../backup/$i"
@@ -26,7 +26,7 @@ function handleDir {
     local path=$3
 
     # Create necessary folders
-    if [ $path == "." ]; then
+    if [ "$path" == "." ]; then
         mkdir "../backup"
         mkdir "../tmp"
     else
@@ -35,15 +35,15 @@ function handleDir {
     fi
 
     # Handle files in directory
-    checkFiles $email $path
+    checkFiles $email "$path"
 
     # Handle directories in directory
-    find $path -maxdepth 1 ! -path $path -type d | while read i
+    find "$path" -maxdepth 1 ! -path "$path" -type d | while read i
     do
         if [ $depth -gt 0 ]; then
-            handleDir $[$depth-1] $email $i
+            handleDir $[$depth-1] $email "$i"
         elif [ $depth -lt 0 ]; then
-            handleDir $depth $email $i
+            handleDir $depth $email "$i"
         else
             local oldPath=$PWD
             cd "$path"
