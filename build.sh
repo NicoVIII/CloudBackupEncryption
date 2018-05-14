@@ -23,7 +23,7 @@ if [ "$version" != "" ]; then
     cd ".."
     mv *.deb "../deploy"
     cd ".."
-    #rm -r $buildDir
+    rm -r $buildDir
 
     zip "deploy/pgpbackup-v$version-light.zip" encrypt.sh decrypt.sh LICENSE.txt README.md
 else
