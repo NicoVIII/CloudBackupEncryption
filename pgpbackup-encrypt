@@ -48,7 +48,7 @@ function handleDir {
             local oldPath=$PWD
             cd "$path"
             folder=$(basename "$i")
-            zip -r "$oldPath/../tmp/$i.zip" "./$folder" > /dev/null
+            zip -q -r "$oldPath/../tmp/$i.zip" "./$folder"
             cd "$oldPath"
             gpg -q --output "../backup/$i.zip.gpg" --encrypt --recipient $email "../tmp/$i.zip"
         fi

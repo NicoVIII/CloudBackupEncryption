@@ -40,7 +40,7 @@ do
 	dir=$(dirname "$zip")
     gpg -q --output "../decrypted/$zip" --decrypt "$j"
 	if [ $unzip = 1 ] && [[ $zip == *.zip ]]; then
-		unzip "../decrypted/$zip" -d "../decrypted/$dir" > /dev/null
+		unzip -q "../decrypted/$zip" -d "../decrypted/$dir"
         rm "../decrypted/$zip"
 	fi
 done

@@ -1,11 +1,13 @@
 #!/bin/bash
 version=$1
 
-# Create .zip
-# TODO:
+if [ "$version" != "" ]; then
+    mkdir "deploy"
 
-# Create .deb
-if [ $1 != "" ]; then
+    # Create .zip
+    zip "deploy/pgpbackup-v$version.zip" pgpbackup-decrypt pgpbackup-encrypt encrypt.sh decrypt.sh LICENSE.txt README.md
+
+    # Create .deb and light-.zip
     buildDir="tmp"
     mkdir $buildDir
     mkdir "$buildDir/pgpbackup-$version"
@@ -14,12 +16,16 @@ if [ $1 != "" ]; then
     cd "$buildDir/pgpbackup-$version"
     dh_make -s -e nicolinder@icloud.com --createorig
     cp "../../build/install" "debian/install"
+    cp "../../build/control" "debian/control"
+    cp "../../changelog.txt" "debian/changelog"
     rm debian/*.ex debian/*.EX
-    debuild
+    debuild -us -uc
     cd ".."
-    mv *.deb ".."
+    mv *.deb "../deploy"
     cd ".."
-    rm -r $buildDir
+    #rm -r $buildDir
+
+    zip "deploy/pgpbackup-v$version-light.zip" encrypt.sh decrypt.sh LICENSE.txt README.md
 else
-    echo "To build a .deb package, provide a version as first argument"
+    echo "To build provide a version as first argument"
 fi
