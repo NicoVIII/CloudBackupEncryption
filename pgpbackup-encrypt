@@ -12,10 +12,8 @@ function checkFiles {
 
     find "$path" -maxdepth 1 -type f | while read i
     do
-        if [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+        if [ ! -f "../backup/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             gpg -q --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
-        else
-            cp "$i" "../backup/$i"
         fi
     done
 }
@@ -26,38 +24,56 @@ function handleDir {
     local path=$3
 
     # Create necessary folders
-    if [ "$path" == "." ]; then
+    if [ "$path" = "." ]; then
         mkdir "../backup"
         mkdir "../tmp"
-    else
-        mkdir "../backup/$path"
-        mkdir "../tmp/$path"
+        cp "decrypt.sh" "../backup/decrypt.sh"
+        cp "pgpbackup-decrypt" "../backup/pgpbackup-decrypt" > /dev/null
     fi
 
-    # Handle files in directory
-    checkFiles $email "$path"
-
-    # Handle directories in directory
-    find "$path" -maxdepth 1 ! -path "$path" -type d | while read i
-    do
-        if [ $depth -gt 0 ]; then
-            handleDir $[$depth-1] $email "$i"
-        elif [ $depth -lt 0 ]; then
-            handleDir $depth $email "$i"
+    if [ $depth -eq 0 ]; then
+        local oldPath=$PWD
+        if [ "$path" = "." ]; then
+            folderPath="."
+            folderName="backup"
         else
-            local oldPath=$PWD
             cd "$path"
-            folder=$(basename "$i")
-            zip -q -r "$oldPath/../tmp/$i.zip" "./$folder"
-            cd "$oldPath"
-            gpg -q --output "../backup/$i.zip.gpg" --encrypt --recipient $email "../tmp/$i.zip"
+            folderPath="$(dirname "$path")"
+            folderName="$(basename "$path")"
         fi
-    done
+        find "." -maxdepth 1 ! -name "." ! -name "decrypt.sh" ! -name "pgpbackup-decrypt" | while read i
+        do
+            zip -qur "$oldPath/../tmp/$folderPath/$folderName.zip" "./$i"
+        done
+        cd "$oldPath"
+        if [ "$path" == "." ]; then
+            path=$folderName
+        fi
+        gpg -q --output "../backup/$path.zip.gpg" --encrypt --recipient $email "../tmp/$path.zip"
+    else
+        if [ "$path" != "." ]; then
+            mkdir "../backup/$path"
+            mkdir "../tmp/$path"
+        fi
+
+        # Handle files in directory
+        checkFiles $email "$path"
+
+        # Handle directories in directory
+        find "$path" -maxdepth 1 ! -path "$path" -type d | while read i
+        do
+            if [ $depth -gt 0 ]; then
+                handleDir $[$depth-1] $email "$i"
+            elif [ $depth -lt 0 ]; then
+                handleDir $depth $email "$i"
+            fi
+        done
+    fi
 }
 
 #Check flags
 depth=-1
-while getopts ":d:h:v" opt; do
+while getopts ":d:hv" opt; do
     case $opt in
         d)
             #TODO: check for int
@@ -89,5 +105,9 @@ fi
 email=$1
 
 handleDir $depth $email .
+
+# Tidy up
+rm -r "../tmp"
+
 echo "Finished encrypting!"
 exit 0
