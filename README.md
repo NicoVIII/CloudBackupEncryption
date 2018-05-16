@@ -18,11 +18,11 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 ## Usage
 
 ### Encryption
-1. Put all four `.sh` files into the folder which contents you want to encrypt.
+1. Put both `.sh` files into the folder which contents you want to encrypt. If you want to use the libraries in the portable version, also add `pgpbackup-encrypt` and `pgpbackup-decrypt`.
 2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
-3. If you want to zip your directories, add `-d <depth>` with `<depth>` as the depth you wish for zipping directories. Depth 0 zipps all directories in the folder the script is in.
+3. If you want to zip your directories, add `-d <depth>` with `<depth>` as the depth you wish for zipping directories. Depth 0 creates one file for everything, depth 1 zips all folders in the directory of the script. Have a look at [Examples](#examples).
 4. You should configure decrypt in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decryptLib](#decryptlib)
-5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. All zipped folders are placed inside a `tmp` folder next to the folder with the files and the final backup inside a `backup` folder next to the folder with the files.
+5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
 
 ### Decryption
 1. The files `decrypt.sh` and (if exists) `pgpbackup-decrypt` should not be encrypted. Make them executable in the backup you created.
@@ -32,10 +32,10 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 These are the options and flags you can use with the files and insert into `encrypt.sh` and `decrypt.sh`.
 
 ### encryptLib
--d depth : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script
+`-d <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script
 
 ### decryptLib
--u : unzippes all decrypted archives
+`-u` : unzippes all decrypted archives
 
 ## Examples
 
