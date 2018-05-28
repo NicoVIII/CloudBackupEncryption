@@ -84,9 +84,7 @@ exec $ENCRYPT -d 0 example@example.com
 ```
 The encrypted filestructure looks like this:
 ```
-folder
-|  file1.file.gpg
-|  folder1.zip.gpg
+backup.zip.gpg
 ```
 
 #### Depth: 1
@@ -98,8 +96,21 @@ The encrypted filestructure looks like this:
 ```
 folder
 |  file1.file.gpg
+|  folder1.zip.gpg
+```
+
+#### Depth: 2
+With the following line in `encrypt.sh`:
+```
+exec $ENCRYPT -d 2 example@example.com
+```
+The encrypted filestructure looks like this:
+```
+folder
+|  file1.file.gpg
 |
 |__folder1
    |  file2.file.gpg
    |  folder2.zip.gpg
+   |  folder3.zip.gpg
 ```
