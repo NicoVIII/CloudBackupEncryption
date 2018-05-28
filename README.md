@@ -1,7 +1,7 @@
 # PGP-Backup
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![GitHub Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)]()
-[![Github Pre-Release]](https://img.shields.io/github/downloads-pre/atom/atom/latest/total.svg)
+[![Github Pre-Release](https://img.shields.io/github/downloads-pre/atom/atom/latest/total.svg)]()
 [![Github Downloads](https://img.shields.io/github/downloads/NicoVIII/PGP-Backup/total.svg)]()
 [![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
 
