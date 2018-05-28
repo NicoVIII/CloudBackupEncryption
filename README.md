@@ -57,7 +57,7 @@ folder
 ```
 
 #### No Depth
-With the following `encrypt.sh`:
+With the following line in `encrypt.sh`:
 ```
 exec $ENCRYPT example@example.com
 ```
@@ -77,7 +77,7 @@ folder
 ```
 
 #### Depth: 0
-With the following `encrypt.sh`:
+With the following line in `encrypt.sh`:
 ```
 exec $ENCRYPT -d 0 example@example.com
 ```
@@ -89,7 +89,7 @@ folder
 ```
 
 #### Depth: 1
-With the following `encrypt.sh`:
+With the following line in `encrypt.sh`:
 ```
 exec $ENCRYPT -d 1 example@example.com
 ```
