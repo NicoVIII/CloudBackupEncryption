@@ -1,8 +1,9 @@
 # PGP-Backup
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![GitHub release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)]()
-[![Github Releases](https://img.shields.io/github/downloads/NicoVIII/PGP-Backup/total.svg)]()
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
+[![GitHub Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)]()
+[![Github Pre-Release]](https://img.shields.io/github/downloads-pre/atom/atom/latest/total.svg)
+[![Github Downloads](https://img.shields.io/github/downloads/NicoVIII/PGP-Backup/total.svg)]()
+[![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
 Because this project consists out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
