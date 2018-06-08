@@ -69,7 +69,9 @@ function handleDir {
         if [ "$path" == "." ]; then
             path=$folderName
         fi
-        gpg -q --output "../backup/$path.zip.gpg" --encrypt --recipient $email "../tmp/$path.zip"
+        if [ -f "../tmp/$path.zip" ]; then
+            gpg -q --output "../backup/$path.zip.gpg" --encrypt --recipient $email "../tmp/$path.zip"
+        fi
     else
         if [ "$path" != "." ]; then
             mkdir "../backup/$path"
