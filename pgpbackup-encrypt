@@ -4,7 +4,7 @@
 
 progname="PGP-Backup"
 libname="Encryption"
-version="v0.2.0-alpha.1"
+version="v0.2.0-alpha.2"
 
 function checkFiles {
     local email=$1
