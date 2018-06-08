@@ -9,8 +9,21 @@ version="v0.2.0-alpha.1"
 function checkFiles {
     local email=$1
     local path=$2
+    local hiddenFiles=$3
 
-    find "$path" -maxdepth 1 -type f | while read i
+    if [ $hiddenFiles -eq 0 ]; then
+        local findOptions="! -path \"*/.*\"";
+    else
+        local findOptions="";
+    fi
+
+    findCommand="find \"$path\" -maxdepth 1"
+    if [ $hiddenFiles -eq 0 ]; then
+        findCommand+=" ! -path \"*/.*\"";
+    fi
+    findCommand+=" -type f $findOptions"
+
+    eval $findCommand | while read i
     do
         if [ ! -f "../backup/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             gpg -q --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
@@ -22,6 +35,7 @@ function handleDir {
     local depth=$1
     local email=$2
     local path=$3
+    local hiddenFiles=$4
 
     # Create necessary folders
     if [ "$path" = "." ]; then
@@ -41,7 +55,13 @@ function handleDir {
             folderPath="$(dirname "$path")"
             folderName="$(basename "$path")"
         fi
-        find "." -maxdepth 1 ! -name "." ! -name "decrypt.sh" ! -name "pgpbackup-decrypt" | while read i
+
+        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" $findOptions"
+        if [ $hiddenFiles -eq 0 ]; then
+            findCommand+="! -path \"*/.*\""
+        fi
+
+        eval $findCommand | while read i
         do
             zip -qur "$oldPath/../tmp/$folderPath/$folderName.zip" "./$i"
         done
@@ -57,15 +77,21 @@ function handleDir {
         fi
 
         # Handle files in directory
-        checkFiles $email "$path"
+        checkFiles $email "$path" $hiddenFiles
 
         # Handle directories in directory
-        find "$path" -maxdepth 1 ! -path "$path" -type d | while read i
+        findCommand="find \"$path\" -maxdepth 1 $findOptions ! -path \"$path\""
+        if [ $hiddenFiles -eq 0 ]; then
+            findCommand+=" ! -path \"*/.*\""
+        fi
+        findCommand+=" -type d"
+
+        eval $findCommand | while read i
         do
             if [ $depth -gt 0 ]; then
-                handleDir $[$depth-1] $email "$i"
+                handleDir $[$depth-1] $email "$i" $hiddenFiles
             elif [ $depth -lt 0 ]; then
-                handleDir $depth $email "$i"
+                handleDir $depth $email "$i" $hiddenFiles
             fi
         done
     fi
@@ -73,8 +99,11 @@ function handleDir {
 
 #Check flags
 depth=-1
-while getopts ":d:hv" opt; do
+hiddenFiles=0
+while getopts ":ad:hv" opt; do
     case $opt in
+        a)
+            hiddenFiles=1;;
         d)
             #TODO: check for int
             depth=$OPTARG;;
@@ -104,7 +133,7 @@ if [ $# -ne 1 ]; then
 fi
 email=$1
 
-handleDir $depth $email .
+handleDir $depth $email . $hiddenFiles
 
 # Tidy up
 rm -r "../tmp"
