@@ -48,7 +48,7 @@ unzip=0
 while getopts ":huv" opt; do
     case $opt in
         h)
-            echo "Usage: pgpbackup-decrypt [-u]"
+            echo "Usage: pgpbackup-decrypt [-u | -v]"
             exit 0;;
         u)
             unzip=1;;

@@ -21,8 +21,8 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 ### Encryption
 1. Put both `.sh` files into the folder which contents you want to encrypt. If you want to use the libraries in the portable version, also add `pgpbackup-encrypt` and `pgpbackup-decrypt`.
 2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
-3. If you want to zip your directories, add `-d <depth>` with `<depth>` as the depth you wish for zipping directories. Depth 0 creates one file for everything, depth 1 zips all folders in the directory of the script. Have a look at [Examples](#examples).
-4. You should configure decrypt in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decryptLib](#decryptlib)
+3. Configure encryption in `encrypt.sh`. Look up the options at [Options / encrypt](#encrypt)
+4. You should configure decryption in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decrypt](#decrypt)
 5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
 
 ### Decryption
@@ -32,11 +32,15 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 ## Options
 These are the options and flags you can use with the files and insert into `encrypt.sh` and `decrypt.sh`.
 
-### encryptLib
-`-d <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script
+### encrypt
+`-a` : include hidden files  
+`-c` : clear filenames, disable hashing  
+`-d <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
+`-v` : echos current version of library
 
-### decryptLib
-`-u` : unzippes all decrypted archives
+### decrypt
+`-u` : unzippes all decrypted archives  
+`-v` : echos current version of library
 
 ## Examples
 
