@@ -24,6 +24,7 @@ function checkFiles {
     local email=$1
     local path=$2
     local hiddenFiles=$3
+    local hash=$4
 
     if [ $hiddenFiles -eq 0 ]; then
         local findOptions="! -path \"*/.*\"";
@@ -40,7 +41,7 @@ function checkFiles {
     eval $findCommand | while read i
     do
         if [ ! -f "../backup/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
-            encryptFile "$email" "$i" "$i" 1
+            encryptFile "$email" "$i" "$i" $hash
         fi
     done
 }
@@ -50,6 +51,7 @@ function handleDir {
     local email=$2
     local path=$3
     local hiddenFiles=$4
+    local hash=$5
 
     # Create necessary folders
     if [ "$path" = "." ]; then
@@ -84,7 +86,7 @@ function handleDir {
             path=$folderName
         fi
         if [ -f "../tmp/$path.pb.zip" ]; then
-            encryptFile "$email" "../tmp/$path.pb.zip" "$path" 1
+            encryptFile "$email" "../tmp/$path.pb.zip" "$path" $hash
         fi
     else
         if [ "$path" != "." ]; then
@@ -93,7 +95,7 @@ function handleDir {
         fi
 
         # Handle files in directory
-        checkFiles $email "$path" $hiddenFiles
+        checkFiles $email "$path" $hiddenFiles $hash
 
         # Handle directories in directory
         findCommand="find \"$path\" -maxdepth 1 $findOptions ! -path \"$path\""
@@ -105,9 +107,9 @@ function handleDir {
         eval $findCommand | while read i
         do
             if [ $depth -gt 0 ]; then
-                handleDir $[$depth-1] $email "$i" $hiddenFiles
+                handleDir $[$depth-1] $email "$i" $hiddenFiles $hash
             elif [ $depth -lt 0 ]; then
-                handleDir $depth $email "$i" $hiddenFiles
+                handleDir $depth $email "$i" $hiddenFiles $hash
             fi
         done
     fi
@@ -115,16 +117,19 @@ function handleDir {
 
 # Check flags
 depth=-1
+hash=1
 hiddenFiles=0
-while getopts ":ad:hv" opt; do
+while getopts ":acd:hv" opt; do
     case $opt in
         a)
             hiddenFiles=1;;
+        c)
+            hash=0;;
         d)
             #TODO: check for int
             depth=$OPTARG;;
         h)
-            echo "Usage: pgpbackup-encrypt [-d depth] email"
+            echo "Usage: pgpbackup-encrypt [-a | -c | -d depth | -h | -v] email"
             exit 0;;
         v)
             echo $progname "-" $libname
@@ -149,23 +154,25 @@ if [ $# -ne 1 ]; then
 fi
 email=$1
 
-handleDir $depth $email . $hiddenFiles
+handleDir $depth $email . $hiddenFiles $hash
 
-# Hash folder names
-cd "../backup"
-find "." -mindepth 1 -depth -type d | while read j
-do
-    path=$(dirname "$j")
-    name=$(basename "$j")
-    hashedName=$(echo "$email-$name" | shasum -a 256 | cut -f1 -d " ")
-    echo "$hashedName;$name" > "$path/foldernames.txt"
-    mv "$j" "$(dirname "$j")/$hashedName"
-done
-find "." -type f -iname "foldernames.txt" | while read j
-do
-    encryptFile $email "$j" "$j" 0
-    rm "$j"
-done
+if [ $hash -eq 1 ]; then
+    # Hash folder names
+    cd "../backup"
+    find "." -mindepth 1 -depth -type d | while read j
+    do
+        path=$(dirname "$j")
+        name=$(basename "$j")
+        hashedName=$(echo "$email-$name" | shasum -a 256 | cut -f1 -d " ")
+        echo "$hashedName;$name" > "$path/foldernames.txt"
+        mv "$j" "$(dirname "$j")/$hashedName"
+    done
+    find "." -type f -iname "foldernames.txt" | while read j
+    do
+        encryptFile $email "$j" "$j" 0
+        rm "$j"
+    done
+fi
 
 # Tidy up
 rm -r "../tmp"
