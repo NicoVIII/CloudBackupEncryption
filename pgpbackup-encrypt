@@ -6,6 +6,20 @@ progname="PGP-Backup"
 libname="Encryption"
 version="v0.2.0-alpha.2"
 
+function encryptFile {
+    local email=$1
+    local file=$2
+    local path=$3
+    local hash=$4
+
+    gpg -q --output "../backup/$path.gpg" --encrypt --recipient "$email" "$file"
+
+    if [ $hash -eq 1 ]; then
+        # Hash filename
+        mv "../backup/$path.gpg" "$(dirname "../backup/$path.gpg")/$(echo "$email-$(basename "$path.gpg")" | shasum -a 256 | cut -f1 -d " ").gpg"
+    fi
+}
+
 function checkFiles {
     local email=$1
     local path=$2
@@ -26,7 +40,7 @@ function checkFiles {
     eval $findCommand | while read i
     do
         if [ ! -f "../backup/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
-            gpg -q --output "../backup/$i.gpg" --encrypt --recipient $email "$i"
+            encryptFile "$email" "$i" "$i" 1
         fi
     done
 }
@@ -63,14 +77,14 @@ function handleDir {
 
         eval $findCommand | while read i
         do
-            zip -qur "$oldPath/../tmp/$folderPath/$folderName.zip" "./$i"
+            zip -qur "$oldPath/../tmp/$folderPath/$folderName.pb.zip" "./$i"
         done
         cd "$oldPath"
         if [ "$path" == "." ]; then
             path=$folderName
         fi
-        if [ -f "../tmp/$path.zip" ]; then
-            gpg -q --output "../backup/$path.zip.gpg" --encrypt --recipient $email "../tmp/$path.zip"
+        if [ -f "../tmp/$path.pb.zip" ]; then
+            encryptFile "$email" "../tmp/$path.pb.zip" "$path" 1
         fi
     else
         if [ "$path" != "." ]; then
@@ -99,7 +113,7 @@ function handleDir {
     fi
 }
 
-#Check flags
+# Check flags
 depth=-1
 hiddenFiles=0
 while getopts ":ad:hv" opt; do
@@ -128,7 +142,7 @@ shift $(($OPTIND - 1))
 
 echo $progname $version "-" $libname
 
-#Parameters
+# Parameters
 if [ $# -ne 1 ]; then
     echo "Please provide an email to encrypt for as argument."
     exit 1
@@ -136,6 +150,22 @@ fi
 email=$1
 
 handleDir $depth $email . $hiddenFiles
+
+# Hash folder names
+cd "../backup"
+find "." -mindepth 1 -depth -type d | while read j
+do
+    path=$(dirname "$j")
+    name=$(basename "$j")
+    hashedName=$(echo "$email-$name" | shasum -a 256 | cut -f1 -d " ")
+    echo "$hashedName;$name" > "$path/foldernames.txt"
+    mv "$j" "$(dirname "$j")/$hashedName"
+done
+find "." -type f -iname "foldernames.txt" | while read j
+do
+    encryptFile $email "$j" "$j" 0
+    rm "$j"
+done
 
 # Tidy up
 rm -r "../tmp"

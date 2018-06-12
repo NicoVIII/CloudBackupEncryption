@@ -6,6 +6,43 @@ progname="PGP-Backup"
 libname="Decryption"
 version="v0.2.0-alpha.2"
 
+function urldecode {
+    : "${*//+/ }"
+    echo -e "${_//%/\\x}"
+}
+
+function decrypt {
+    local path=$1
+
+    find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
+    do
+        cd "../tmp"
+        origFileName=$(gpg -q --status-fd 1 --use-embedded-filename "../backup/$j" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
+        origFileName=$(urldecode "$origFileName")
+        origFile="$(dirname "$j")/$origFileName"
+        mv "$origFileName" "../decrypted/$origFile"
+        if [ $unzip = 1 ] && [[ $origFile = *.pb.zip ]]; then
+            cd "../decrypted"
+            folderName=${origFile::-7}
+            if [[ "$origFile" = *backup.zip ]]; then
+                origFile="."
+            fi
+            unzip -q "$origFile" -d "$folderName"
+            rm "$origFile"
+        elif [ $unzip = 0 ] && [[ $origFile = *.pb.zip ]]; then
+            cd "../decrypted"
+            folderName=${origFile::-7}
+            mv "$origFile" "$folderName.zip"
+        fi
+        cd "../backup"
+    done
+
+    find "$path" -mindepth 1 -maxdepth 1 -type d | while read j
+    do
+        decrypt "$j"
+    done
+}
+
 #Check flags
 unzip=0
 while getopts ":huv" opt; do
@@ -31,6 +68,7 @@ shift $(($OPTIND - 1))
 
 echo $progname $version "-" $libname
 
+mkdir "../tmp"
 mkdir "../decrypted"
 
 find . -depth ! -path . -type d | while read i
@@ -38,24 +76,34 @@ do
     mkdir -p "../decrypted/$i"
 done
 
-find . -depth -type f -iname "*.gpg" | while read j
+decrypt "."
+
+# Restore folder names
+cd "../decrypted"
+find "." -mindepth 1 -depth -type d | while read j
 do
-	origFile=${j::-4}
-	dir=$(dirname "$origFile")
-    gpg -q --output "../decrypted/$origFile" --decrypt "$j"
-	if [ $unzip = 1 ] && [[ $origFile = *.zip ]]; then
-        folderName=${origFile::-4}
-        if [[ "$origFile" = *backup.zip ]]; then
-            origFile="."
+    path=$(dirname "$j")
+    hashedName=$(basename "$j")
+    pattern="^${hashedName};.*$"
+    if [ -f "$path/foldernames.txt" ]; then
+        name=$(grep -E "$pattern" "$path/foldernames.txt" | cut -f 2 -d ";")
+        if [ "$name" != "" ]; then
+            mv "$j" "$path/$name"
         fi
-		unzip -q "../decrypted/$origFile" -d "../decrypted/$folderName"
-        rm "../decrypted/$origFile"
-	fi
+    fi
+done
+
+find "." -type f -iname "foldernames.txt" | while read j
+do
+    rm "$j"
 done
 
 # Copy decrypt stuff to decrypted folder
-cp "decrypt.sh" "../decrypted/decrypt.sh"
-cp "pgpbackup-decrypt" "../decrypted/pgpbackup-decrypt" > /dev/null
+cp "../backup/decrypt.sh" "decrypt.sh"
+cp "../backup/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
+
+# Tidy up
+rm -r "../tmp"
 
 echo "Finished decrypting!"
 exit 0
