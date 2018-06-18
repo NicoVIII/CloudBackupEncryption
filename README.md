@@ -39,7 +39,7 @@ These are the options and flags you can use with the files and insert into `encr
 `-v` : echos current version of library
 
 ### decrypt
-`-u` : unzippes all decrypted archives  
+`-u` : unpacks all decrypted archives  
 `-v` : echos current version of library
 
 ## Examples

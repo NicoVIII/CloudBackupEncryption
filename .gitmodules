@@ -1,0 +1,3 @@
+[submodule "argbash"]
+	path = argbash
+	url = git://github.com/matejak/argbash.git
