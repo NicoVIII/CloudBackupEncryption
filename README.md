@@ -13,7 +13,7 @@ For this scripts to run approprietly you need a working gpg setup. The scripts c
 The commands zip and unzip are called as well, so these must be accessible too. For most linux distributions this is given per default, as far as I know.
 
 ## Installation
-There are two ways of using these script. You can either use them as portable scripts or install them on your machine normally via a `.deb` package. You can download this package on the [release page on github](https://github.com/NicoVIII/PGP-Backup/releases).
+There are two ways of using these script. You can either use them as portable scripts or install them on your machine normally via a `.deb` package (experimental). You can download this package on the [release page on github](https://github.com/NicoVIII/PGP-Backup/releases).
 If you install the `.deb` package, you do not need the scripts `pgpbackup-encrypt` and `pgpbackup-decrypt`.
 
 ## Usage
