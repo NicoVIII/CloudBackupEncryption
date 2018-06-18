@@ -8,17 +8,24 @@ mkdir -p "deploy"
 ./argbash/bin/argbash pgpbackup-decrypt -o tmp/pgpbackup-decrypt
 ./argbash/bin/argbash pgpbackup-encrypt -o tmp/pgpbackup-encrypt
 
+chmod +x ./decrypt.sh
+chmod +x ./encrypt.sh
+chmod +x tmp/pgpbackup-decrypt
+chmod +x tmp/pgpbackup-encrypt
+
 cp tmp/pgpbackup-decrypt deploy
 cp tmp/pgpbackup-encrypt deploy
 
 if [ "$version" != "" ]; then
-    # Create .zip
-    zip "deploy/pgpbackup-v$version.zip" encrypt.sh decrypt.sh LICENSE README.md
+    # Create .tar
+    tar -cf "deploy/pgpbackup-v$version.tar" encrypt.sh decrypt.sh LICENSE README.md
     cd "tmp"
-    zip "../deploy/pgpbackup-v$version.zip" pgpbackup-decrypt pgpbackup-encrypt
+    tar -rf "../deploy/pgpbackup-v$version.tar" pgpbackup-decrypt pgpbackup-encrypt
     cd ".."
 
-    # Create .deb and light-.zip
+    xz -e9 --threads=0 -f "deploy/pgpbackup-v$version.tar"
+
+    # Create .deb and light-.tar
     buildDir="deb"
     mkdir -p "$buildDir/pgpbackup-$version"
     cp tmp/pgpbackup-decrypt "$buildDir/pgpbackup-$version/pgpbackup-decrypt"
@@ -35,7 +42,8 @@ if [ "$version" != "" ]; then
     cd ".."
     rm -r $buildDir
 
-    zip "deploy/pgpbackup-v$version-light.zip" encrypt.sh decrypt.sh LICENSE.txt README.md
+    tar -cf "deploy/pgpbackup-v$version-light.tar" encrypt.sh decrypt.sh LICENSE README.md
+    xz -e9 --threads=0 -f "deploy/pgpbackup-v$version-light.tar"
 else
     echo "To build .deb package provide a version as first argument."
 fi
