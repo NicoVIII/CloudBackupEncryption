@@ -16,32 +16,27 @@ version="v0.2.0-alpha.4"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
+function hashName {
+    local fileName=$1
+
+    echo "$_arg_email-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
+}
+
 function encryptFile {
     local file=$1
     local path=$2
 
     gpg -q --output "../backup/$path.gpg" --encrypt --recipient "$_arg_email" "$file"
-
-    if [ "$_arg_hash_names" = "on" ]; then
-        # Hash filename
-        mv "../backup/$path.gpg" "$(dirname "../backup/$path.gpg")/$(echo "$_arg_email-$(basename "$path.gpg")" | shasum -a 256 | cut -f1 -d " ").gpg"
-    fi
 }
 
 function checkFiles {
     local path=$1
 
-    if [ "$_arg_all" = "off" ]; then
-        local findOptions="! -path \"*/.*\"";
-    else
-        local findOptions="";
-    fi
-
     findCommand="find \"$path\" -maxdepth 1"
     if [ "$_arg_all" = "off" ]; then
         findCommand+=" ! -path \"*/.*\"";
     fi
-    findCommand+=" -type f $findOptions"
+    findCommand+=" -type f"
 
     eval $findCommand | while read i
     do
@@ -74,7 +69,7 @@ function handleDir {
             folderName="$(basename "$path")"
         fi
 
-        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" $findOptions"
+        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
         if [ "$_arg_all" = false ]; then
             findCommand+="! -path \"*/.*\""
         fi
@@ -100,7 +95,7 @@ function handleDir {
         checkFiles "$path"
 
         # Handle directories in directory
-        findCommand="find \"$path\" -maxdepth 1 $findOptions ! -path \"$path\""
+        findCommand="find \"$path\" -maxdepth 1 ! -path \"$path\""
         if [ "$_arg_all" = "off" ]; then
             findCommand+=" ! -path \"*/.*\""
         fi
@@ -117,6 +112,53 @@ function handleDir {
     fi
 }
 
+function addSpacingToOverviewFile {
+    local depth=$1
+    local file=$2
+
+    for (( ; depth>0; depth-- ))
+    do
+        if [ $depth -eq 1 ] && [ $file -eq 1 ]; then
+            printf "| "
+        elif [ $depth -eq 1 ] && [ $file -eq 0 ]; then
+            printf "|_"
+        else
+            printf "  "
+        fi
+    done
+}
+
+function createOverviewFile {
+    local path=$1
+    local depth=$2
+    local overviewFile=$3
+
+    findCommand="find \"$path\" -mindepth 1 -maxdepth 1"
+    if [ "$_arg_all" = "off" ]; then
+        findCommand+=" ! -path \"*/.*\""
+    fi
+
+    # Add files to overview file
+    eval "$findCommand -type f" | while read i
+    do
+        addSpacingToOverviewFile $depth 1 >> "$overviewFile"
+        local name=$(basename "$i")
+        if [[ $name == *.gpg ]]; then
+            printf "%s (%s)\n" "${name::-4}" $(hashName "$name") >> "$overviewFile"
+        else
+            printf "%s\n" "$name" >> "$overviewFile"
+        fi
+    done
+
+    # Add directories to overview file
+    eval "$findCommand -type d" | while read i
+    do
+        addSpacingToOverviewFile $depth 0 >> "$overviewFile"
+        printf "%s (%s)\n" $(basename "$i") $(hashName $(basename "$i")) >> "$overviewFile"
+        createOverviewFile "$i" $[$depth + 1] "$overviewFile"
+    done
+}
+
 echo $progname $version "-" $libname
 
 depth=$_arg_depth
@@ -124,13 +166,24 @@ depth=$_arg_depth
 handleDir $depth $email .
 
 if [ "$_arg_hash_names" = "on" ]; then
-    # Hash folder names
+    # Create overview file
     cd "../backup"
+    overviewFile="overview.txt"
+    createOverviewFile "." 0 "$overviewFile"
+
+    # Hash file names
+    find "." -depth -iname "*.gpg" -type f | while read i
+    do
+        # Hash filename
+        mv "$i" "$(dirname "$i")/$(hashName $(basename "$i")).gpg"
+    done
+
+    # Hash folder names
     find "." -mindepth 1 -depth -type d | while read j
     do
         path=$(dirname "$j")
         name=$(basename "$j")
-        hashedName=$(echo "$_arg_email-$name" | shasum -a 256 | cut -f1 -d " ")
+        hashedName=$(hashName "$name")
         touch "$path/foldernames.txt"
         echo "$hashedName;$name" >> "$path/foldernames.txt"
         mv "$j" "$(dirname "$j")/$hashedName"
@@ -140,6 +193,10 @@ if [ "$_arg_hash_names" = "on" ]; then
         encryptFile "$j" "$j" 0
         rm "$j"
     done
+
+    # Encrypt overview file
+    encryptFile "$overviewFile" "$overviewFile"
+    rm "$overviewFile"
 fi
 
 # Tidy up
