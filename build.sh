@@ -1,5 +1,6 @@
 #!/bin/bash
 version=$1
+type=$2
 
 mkdir -p "tmp"
 mkdir -p "deploy"
@@ -17,35 +18,37 @@ cp tmp/pgpbackup-decrypt deploy
 cp tmp/pgpbackup-encrypt deploy
 
 if [ "$version" != "" ]; then
-    # Create .tar
-    tar -cf "deploy/pgpbackup-v$version.tar" encrypt.sh decrypt.sh LICENSE README.md
-    cd "tmp"
-    tar -rf "../deploy/pgpbackup-v$version.tar" pgpbackup-decrypt pgpbackup-encrypt
-    cd ".."
+    if [ "$type" == "tar" ]; then
+        # Create .tar
+        tar -cf "deploy/pgpbackup-v$version.tar" encrypt.sh decrypt.sh LICENSE README.md
+        cd "tmp"
+        tar -rf "../deploy/pgpbackup-v$version.tar" pgpbackup-decrypt pgpbackup-encrypt
+        cd ".."
 
-    xz -e9 --threads=0 -f "deploy/pgpbackup-v$version.tar"
+        xz -e9 --threads=0 -f "deploy/pgpbackup-v$version.tar"
+    fi
 
-    # Create .deb and light-.tar
-    buildDir="deb"
-    mkdir -p "$buildDir/pgpbackup-$version"
-    cp tmp/pgpbackup-decrypt "$buildDir/pgpbackup-$version/pgpbackup-decrypt"
-    cp tmp/pgpbackup-encrypt "$buildDir/pgpbackup-$version/pgpbackup-encrypt"
-    cd "$buildDir/pgpbackup-$version"
-    dh_make -s -e nicolinder@icloud.com --createorig
-    cp "../../build/install" "debian/install"
-    cp "../../build/control" "debian/control"
-    cp "../../changelog.txt" "debian/changelog"
-    rm debian/*.ex debian/*.EX
-    debuild -us -uc
-    cd ".."
-    mv *.deb "../deploy"
-    cd ".."
-    rm -r $buildDir
+    if [ "$type" == "deb" ]; then
+        # Create .deb and light-.tar
+        buildDir="deb"
+        mkdir -p "$buildDir/pgpbackup-$version"
+        cp tmp/pgpbackup-decrypt "$buildDir/pgpbackup-$version/pgpbackup-decrypt"
+        cp tmp/pgpbackup-encrypt "$buildDir/pgpbackup-$version/pgpbackup-encrypt"
+        cd "$buildDir/pgpbackup-$version"
+        dh_make -s -e nicolinder@icloud.com --createorig
+        cp "../../build/install" "debian/install"
+        cp "../../build/control" "debian/control"
+        cp "../../changelog.txt" "debian/changelog"
+        rm debian/*.ex debian/*.EX
+        debuild -us -uc
+        cd ".."
+        mv *.deb "../deploy"
+        cd ".."
+        rm -r $buildDir
 
-    tar -cf "deploy/pgpbackup-v$version-light.tar" encrypt.sh decrypt.sh LICENSE README.md
-    xz -e9 --threads=0 -f "deploy/pgpbackup-v$version-light.tar"
-else
-    echo "To build .deb package provide a version as first argument."
+        tar -cf "deploy/pgpbackup-v$version-light.tar" encrypt.sh decrypt.sh LICENSE README.md
+        xz -e9 --threads=0 -f "deploy/pgpbackup-v$version-light.tar"
+    fi
 fi
 
 # Clean up

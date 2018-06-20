@@ -16,6 +16,25 @@ version="v0.2.0-alpha.4"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
+echo $progname $version "-" $libname
+
+depth=$_arg_depth
+
+# Determine which tmp folder to use
+if [ -d "../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "../tmp$i"]; then
+            $tmp="tmp$i"
+            break
+        fi
+    done
+else
+    $tmp="tmp"
+fi
+readonly tmpFolder=$tmp
+
+# Functions
 function hashName {
     local fileName=$1
 
@@ -53,7 +72,7 @@ function handleDir {
     # Create necessary folders
     if [ "$path" = "." ]; then
         mkdir "../backup"
-        mkdir "../tmp"
+        mkdir "../$tmpFolder"
         cp "decrypt.sh" "../backup/decrypt.sh"
         cp "pgpbackup-decrypt" "../backup/pgpbackup-decrypt" > /dev/null
     fi
@@ -76,19 +95,19 @@ function handleDir {
 
         eval $findCommand | while read i
         do
-            zip -qur "$oldPath/../tmp/$folderPath/$folderName.pb.zip" "./$i"
+            zip -qur "$oldPath/../$tmpFolder/$folderPath/$folderName.pb.zip" "./$i"
         done
         cd "$oldPath"
         if [ "$path" == "." ]; then
             path=$folderName
         fi
-        if [ -f "../tmp/$path.pb.zip" ]; then
-            encryptFile "../tmp/$path.pb.zip" "$path.zip"
+        if [ -f "../$tmpFolder/$path.pb.zip" ]; then
+            encryptFile "../$tmpFolder/$path.pb.zip" "$path.zip"
         fi
     else
         if [ "$path" != "." ]; then
             mkdir "../backup/$path"
-            mkdir "../tmp/$path"
+            mkdir "../$tmpFolder/$path"
         fi
 
         # Handle files in directory
@@ -159,10 +178,7 @@ function createOverviewFile {
     done
 }
 
-echo $progname $version "-" $libname
-
-depth=$_arg_depth
-
+# Main code
 handleDir $depth $email .
 
 if [ "$_arg_hash_names" = "on" ]; then
@@ -200,7 +216,7 @@ if [ "$_arg_hash_names" = "on" ]; then
 fi
 
 # Tidy up
-rm -r "../tmp"
+rm -r "../$tmpFolder"
 
 echo "Finished encrypting!"
 exit 0
