@@ -20,7 +20,7 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 
 ### Encryption
 1. Put both `.sh` files into the folder which contents you want to encrypt. If you want to use the libraries in the portable version, also add `pgpbackup-encrypt` and `pgpbackup-decrypt`.
-2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
+2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key. If you want to encrypt the backup for multiple keys, just add the other email addresses after the first one.
 3. Configure encryption in `encrypt.sh`. Look up the options at [Options / encrypt](#encrypt)
 4. You should configure decryption in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decrypt](#decrypt)
 5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
