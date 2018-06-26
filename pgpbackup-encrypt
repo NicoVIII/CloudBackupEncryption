@@ -16,7 +16,7 @@ version="v0.2.0-alpha.4"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
-echo $progname $version "-" $libname
+echo "$progname $version - $libname"
 
 depth=$_arg_depth
 
@@ -34,6 +34,19 @@ else
 fi
 readonly tmpFolder=$tmp
 
+# Delete old backup folder, if existing
+readonly backupFolder="backup"
+if [ -d "../$backupFolder" ]; then
+    if [ -f "../$backupFolder/decrypt.sh" ]; then
+        rm -r "../$backupFolder"
+        echo "Removed existing backup folder."
+    else
+        echo "The backup folder is already existing."
+        echo "Aborted."
+        exit 1
+    fi
+fi
+
 # Functions
 function hashName {
     local fileName=$1
@@ -45,7 +58,7 @@ function encryptFile {
     local file=$1
     local path=$2
 
-    local command="gpg -q --output \"../backup/$path.gpg\" --encrypt"
+    local command="gpg -q --output \"../$backupFolder/$path.gpg\" --encrypt"
     for i in ${_arg_emails[@]}; do
         command+=" --recipient \"$i\""
     done
@@ -64,7 +77,7 @@ function checkFiles {
 
     eval $findCommand | while read i
     do
-        if [ ! -f "../backup/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+        if [ ! -f "../$backupFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             encryptFile "$i" "$i"
         fi
     done
@@ -76,10 +89,10 @@ function handleDir {
 
     # Create necessary folders
     if [ "$path" = "." ]; then
-        mkdir "../backup"
+        mkdir -p "../$backupFolder"
         mkdir "../$tmpFolder"
-        cp "decrypt.sh" "../backup/decrypt.sh"
-        cp "pgpbackup-decrypt" "../backup/pgpbackup-decrypt" > /dev/null
+        cp "decrypt.sh" "../$backupFolder/decrypt.sh"
+        cp "pgpbackup-decrypt" "../$backupFolder/pgpbackup-decrypt" > /dev/null
     fi
 
     if [ $depth -eq 0 ]; then
