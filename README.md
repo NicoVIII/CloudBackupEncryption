@@ -33,14 +33,12 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 These are the options and flags you can use with the files and insert into `encrypt.sh` and `decrypt.sh`.
 
 ### encrypt
-`-a` : include hidden files  
-`-c` : clear filenames, disable hashing  
-`-d <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
-`-v` : echos current version of library
+`-a | --(no-)all` : include hidden files  
+`-d | --depth <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
+`-n | --(no-)hash-names` : hash filenames (enabled by default)
 
 ### decrypt
-`-u` : unpacks all decrypted archives  
-`-v` : echos current version of library
+`-u | --(no-)unpack` : unpacks all decrypted archives
 
 ## Examples
 
