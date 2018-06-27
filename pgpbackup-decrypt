@@ -7,6 +7,7 @@ libname="Decryption"
 version="__VERSION__"
 
 # ARG_OPTIONAL_BOOLEAN([unpack],[u],[Unpacks all archives from pgpbackup-encrypt])
+# ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
 # ARGBASH_GO()
@@ -37,11 +38,6 @@ if [ -d "../$decryptFolder" ]; then
     exit 1
 fi
 
-function urldecode {
-    : "${*//+/ }"
-    echo -e "${_//%/\\x}"
-}
-
 function decrypt {
     local path=$1
 
@@ -49,8 +45,12 @@ function decrypt {
     do
         oldPath=$PWD
         cd "../$tmpFolder"
-        origFileName=$(gpg -q --status-fd 1 --use-embedded-filename "$oldPath/$j" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
-        origFileName=$(urldecode "$origFileName")
+        command="gpg -q --status-fd 1 --use-embedded-filename \"$oldPath/$j\""
+        if [ "$_arg_verbose" == "on" ]; then
+            echo "> $command"
+        fi
+        origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
+        origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
         origFile="$(dirname "$j")/$origFileName"
         mv "$origFileName" "../$decryptFolder/$origFile"
         if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
@@ -59,7 +59,11 @@ function decrypt {
             if [[ "$origFile" = *backup.pb.zip ]]; then
                 folderName="."
             fi
-            unzip -q "$origFile" -d "$folderName"
+            command="unzip -q \"$origFile\" -d \"$folderName\""
+            if [ "$_arg_verbose" == "on" ]; then
+                echo "> $command"
+            fi
+            eval $command
             rm "$origFile"
         elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
             cd "../$decryptFolder"

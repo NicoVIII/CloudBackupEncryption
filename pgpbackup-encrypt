@@ -10,7 +10,9 @@ version="__VERSION__"
 # ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
-# ARG_OPTIONAL_BOOLEAN([hash-names],[n],[Hashes file and directory names],[on])
+# ARG_OPTIONAL_BOOLEAN([hash-names],,[Hashes file and directory names (deprecated, use --name-hashing instead)],[on])
+# ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names],[on])
+# ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
 # ARGBASH_GO()
@@ -62,7 +64,10 @@ function encryptFile {
     for i in ${_arg_emails[@]}; do
         command+=" --recipient \"$i\""
     done
-    command+=" $file"
+    command+=" \"$file\""
+    if [ "$_arg_verbose" == "on" ]; then
+        echo "> $command"
+    fi
     eval $command
 }
 
@@ -113,7 +118,11 @@ function handleDir {
 
         eval $findCommand | while read i
         do
-            zip -qur "$oldPath/../$tmpFolder/$folderPath/$folderName.pb.zip" "./$i"
+            command="zip -qur \"$oldPath/../$tmpFolder/$folderPath/$folderName.pb.zip\" \"./$i\""
+            if [ "$_arg_verbose" == "on" ]; then
+                echo "> $command"
+            fi
+            eval $command
         done
         cd "$oldPath"
         if [ "$path" == "." ]; then
@@ -199,7 +208,7 @@ function createOverviewFile {
 # Main code
 handleDir $depth $email .
 
-if [ "$_arg_hash_names" = "on" ]; then
+if [ "$_arg_name_hashing" = "on" ] && [ "$_arg_hash_names" = "on" ]; then
     # Create overview file
     cd "../backup"
     overviewFile="overview.txt"
