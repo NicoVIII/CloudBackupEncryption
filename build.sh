@@ -6,9 +6,11 @@ mkdir -p "tmp"
 mkdir -p "deploy"
 
 # Run Argbash
+echo "Run argbash to build parameter support."
 ./argbash/bin/argbash pgpbackup-decrypt -o tmp/pgpbackup-decrypt
 ./argbash/bin/argbash pgpbackup-encrypt -o tmp/pgpbackup-encrypt
 
+echo "Deploy scripts."
 chmod +x ./decrypt.sh
 chmod +x ./encrypt.sh
 chmod +x tmp/pgpbackup-decrypt
@@ -36,4 +38,5 @@ fi
 
 # Clean up
 rm -r "tmp"
+echo "Finished."
 exit 0
