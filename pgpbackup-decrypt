@@ -12,6 +12,31 @@ version="v0.2.0-alpha.4"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
+
+echo "$progname $version - $libname"
+
+# Determine which tmp folder to use
+if [ -d "../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "../tmp$i" ]; then
+            tmp="tmp$i"
+            break
+        fi
+    done
+else
+    tmp="tmp"
+fi
+readonly tmpFolder=$tmp
+
+# Check if decrypted folder exists
+readonly decryptFolder="decrypted"
+if [ -d "../$decryptFolder" ]; then
+    echo "The decrypt folder is already existing."
+    echo "Aborted."
+    exit 1
+fi
+
 function urldecode {
     : "${*//+/ }"
     echo -e "${_//%/\\x}"
@@ -22,13 +47,14 @@ function decrypt {
 
     find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
     do
-        cd "../tmp"
-        origFileName=$(gpg -q --status-fd 1 --use-embedded-filename "../backup/$j" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
+        oldPath=$PWD
+        cd "../$tmpFolder"
+        origFileName=$(gpg -q --status-fd 1 --use-embedded-filename "$oldPath/$j" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
         origFileName=$(urldecode "$origFileName")
         origFile="$(dirname "$j")/$origFileName"
-        mv "$origFileName" "../decrypted/$origFile"
+        mv "$origFileName" "../$decryptFolder/$origFile"
         if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "../decrypted"
+            cd "../$decryptFolder"
             folderName=${origFile::-7}
             if [[ "$origFile" = *backup.zip ]]; then
                 origFile="."
@@ -36,11 +62,11 @@ function decrypt {
             unzip -q "$origFile" -d "$folderName"
             rm "$origFile"
         elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "../decrypted"
+            cd "../$decryptFolder"
             folderName=${origFile::-7}
             mv "$origFile" "$folderName.zip"
         fi
-        cd "../backup"
+        cd "$oldPath"
     done
 
     find "$path" -mindepth 1 -maxdepth 1 -type d | while read j
@@ -49,20 +75,19 @@ function decrypt {
     done
 }
 
-echo $progname $version "-" $libname
-
-mkdir "../tmp"
-mkdir "../decrypted"
+mkdir "../$tmpFolder"
+mkdir "../$decryptFolder"
 
 find . -depth ! -path . -type d | while read i
 do
-    mkdir -p "../decrypted/$i"
+    mkdir -p "../$decryptFolder/$i"
 done
 
 decrypt "."
 
 # Restore folder names
-cd "../decrypted"
+oldPath=$PWD
+cd "../$decryptFolder"
 find "." -mindepth 1 -depth -type d | while read j
 do
     path=$(dirname "$j")
@@ -82,11 +107,11 @@ do
 done
 
 # Copy decrypt stuff to decrypted folder
-cp "../backup/decrypt.sh" "decrypt.sh"
-cp "../backup/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
+cp "$oldPath/decrypt.sh" "decrypt.sh"
+cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
 
 # Tidy up
-rm -r "../tmp"
+rm -r "../$tmpFolder"
 
 echo "Finished decrypting!"
 exit 0

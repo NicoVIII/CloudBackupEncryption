@@ -7,7 +7,7 @@ libname="Encryption"
 version="v0.2.0-alpha.4"
 
 # ARG_POSITIONAL_DOUBLEDASH()
-# ARG_POSITIONAL_SINGLE([email], [email to encrypt for])
+# ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
 # ARG_OPTIONAL_BOOLEAN([hash-names],[n],[Hashes file and directory names],[on])
@@ -16,7 +16,7 @@ version="v0.2.0-alpha.4"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
-echo $progname $version "-" $libname
+echo "$progname $version - $libname"
 
 depth=$_arg_depth
 
@@ -24,28 +24,46 @@ depth=$_arg_depth
 if [ -d "../tmp" ]; then
     for i in {1..9}
     do
-        if [ ! -d "../tmp$i"]; then
-            $tmp="tmp$i"
+        if [ ! -d "../tmp$i" ]; then
+            tmp="tmp$i"
             break
         fi
     done
 else
-    $tmp="tmp"
+    tmp="tmp"
 fi
 readonly tmpFolder=$tmp
+
+# Delete old backup folder, if existing
+readonly backupFolder="backup"
+if [ -d "../$backupFolder" ]; then
+    if [ -f "../$backupFolder/decrypt.sh" ]; then
+        rm -r "../$backupFolder"
+        echo "Removed existing backup folder."
+    else
+        echo "The backup folder is already existing."
+        echo "Aborted."
+        exit 1
+    fi
+fi
 
 # Functions
 function hashName {
     local fileName=$1
 
-    echo "$_arg_email-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
+    echo "${_arg_emails[0]}-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
 }
 
 function encryptFile {
     local file=$1
     local path=$2
 
-    gpg -q --output "../backup/$path.gpg" --encrypt --recipient "$_arg_email" "$file"
+    local command="gpg -q --output \"../$backupFolder/$path.gpg\" --encrypt"
+    for i in ${_arg_emails[@]}; do
+        command+=" --recipient \"$i\""
+    done
+    command+=" $file"
+    eval $command
 }
 
 function checkFiles {
@@ -59,7 +77,7 @@ function checkFiles {
 
     eval $findCommand | while read i
     do
-        if [ ! -f "../backup/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+        if [ ! -f "../$backupFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             encryptFile "$i" "$i"
         fi
     done
@@ -71,10 +89,10 @@ function handleDir {
 
     # Create necessary folders
     if [ "$path" = "." ]; then
-        mkdir "../backup"
+        mkdir -p "../$backupFolder"
         mkdir "../$tmpFolder"
-        cp "decrypt.sh" "../backup/decrypt.sh"
-        cp "pgpbackup-decrypt" "../backup/pgpbackup-decrypt" > /dev/null
+        cp "decrypt.sh" "../$backupFolder/decrypt.sh"
+        cp "pgpbackup-decrypt" "../$backupFolder/pgpbackup-decrypt" > /dev/null
     fi
 
     if [ $depth -eq 0 ]; then

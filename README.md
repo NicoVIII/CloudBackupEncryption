@@ -1,8 +1,8 @@
 # PGP-Backup
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![GitHub Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)]()
-[![Github Pre-Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup/all.svg?label=prerelease)]()
-[![Github Downloads](https://img.shields.io/github/downloads/NicoVIII/PGP-Backup/total.svg)]()
+[![GitHub Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)](https://github.com/NicoVIII/PGP-Backup/releases/latest)
+[![Github Pre-Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup/all.svg?label=prerelease)](https://github.com/NicoVIII/PGP-Backup/releases)
+[![Github Downloads](https://img.shields.io/github/downloads/NicoVIII/PGP-Backup/total.svg)](https://github.com/NicoVIII/PGP-Backup/releases)
 [![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
@@ -20,7 +20,7 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 
 ### Encryption
 1. Put both `.sh` files into the folder which contents you want to encrypt. If you want to use the libraries in the portable version, also add `pgpbackup-encrypt` and `pgpbackup-decrypt`.
-2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key.
+2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key. If you want to encrypt the backup for multiple keys, just add the other email addresses after the first one.
 3. Configure encryption in `encrypt.sh`. Look up the options at [Options / encrypt](#encrypt)
 4. You should configure decryption in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decrypt](#decrypt)
 5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
@@ -33,14 +33,12 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 These are the options and flags you can use with the files and insert into `encrypt.sh` and `decrypt.sh`.
 
 ### encrypt
-`-a` : include hidden files  
-`-c` : clear filenames, disable hashing  
-`-d <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
-`-v` : echos current version of library
+`-a | --(no-)all` : include hidden files  
+`-d | --depth <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
+`-n | --(no-)hash-names` : hash filenames (enabled by default)
 
 ### decrypt
-`-u` : unpacks all decrypted archives  
-`-v` : echos current version of library
+`-u | --(no-)unpack` : unpacks all decrypted archives
 
 ## Examples
 
