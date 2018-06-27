@@ -1,5 +1,0 @@
-pgpbackup (0.2.0-1) unstable; urgency=medium
-
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
-
- -- Nico <nico@unknown>  Mon, 14 May 2018 16:38:50 +0200

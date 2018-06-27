@@ -28,24 +28,7 @@ if [ "$version" != "" ]; then
         xz -e9 --threads=0 -f "deploy/pgpbackup-v$version.tar"
     fi
 
-    if [ "$type" == "deb" ]; then
-        # Create .deb and light-.tar
-        buildDir="deb"
-        mkdir -p "$buildDir/pgpbackup-$version"
-        cp tmp/pgpbackup-decrypt "$buildDir/pgpbackup-$version/pgpbackup-decrypt"
-        cp tmp/pgpbackup-encrypt "$buildDir/pgpbackup-$version/pgpbackup-encrypt"
-        cd "$buildDir/pgpbackup-$version"
-        dh_make -s -e nicolinder@icloud.com --createorig
-        cp "../../build/install" "debian/install"
-        cp "../../build/control" "debian/control"
-        cp "../../changelog.txt" "debian/changelog"
-        rm debian/*.ex debian/*.EX
-        debuild -us -uc
-        cd ".."
-        mv *.deb "../deploy"
-        cd ".."
-        rm -r $buildDir
-
+    if [ "$type" == "tar-light" ]; then
         tar -cf "deploy/pgpbackup-v$version-light.tar" encrypt.sh decrypt.sh LICENSE README.md
         xz -e9 --threads=0 -f "deploy/pgpbackup-v$version-light.tar"
     fi
