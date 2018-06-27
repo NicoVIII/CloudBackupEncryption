@@ -1,2 +1,4 @@
 #!/bin/bash
-./decryptLib.sh -u
+DECRYPT=pgpbackup-decrypt;command -v pgpbackup-decrypt > /dev/null || DECRYPT=./$DECRYPT;
+
+exec $DECRYPT -u

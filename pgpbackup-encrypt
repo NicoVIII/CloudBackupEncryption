@@ -1,0 +1,241 @@
+#!/bin/bash
+
+#TODO: Documentation
+
+progname="PGP-Backup"
+libname="Encryption"
+version="__VERSION__"
+
+# ARG_POSITIONAL_DOUBLEDASH()
+# ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
+# ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
+# ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
+# ARG_OPTIONAL_BOOLEAN([hash-names],[n],[Hashes file and directory names],[on])
+# ARG_HELP([short program description (optional)],[long program description (optional)])
+# ARG_VERSION([echo $version])
+# ARGBASH_GO()
+
+# [ <-- needed because of Argbash
+echo "$progname $version - $libname"
+
+depth=$_arg_depth
+
+# Determine which tmp folder to use
+if [ -d "../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "../tmp$i" ]; then
+            tmp="tmp$i"
+            break
+        fi
+    done
+else
+    tmp="tmp"
+fi
+readonly tmpFolder=$tmp
+
+# Delete old backup folder, if existing
+readonly backupFolder="backup"
+if [ -d "../$backupFolder" ]; then
+    if [ -f "../$backupFolder/decrypt.sh" ]; then
+        rm -r "../$backupFolder"
+        echo "Removed existing backup folder."
+    else
+        echo "The backup folder is already existing."
+        echo "Aborted."
+        exit 1
+    fi
+fi
+
+# Functions
+function hashName {
+    local fileName=$1
+
+    echo "${_arg_emails[0]}-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
+}
+
+function encryptFile {
+    local file=$1
+    local path=$2
+
+    local command="gpg -q --output \"../$backupFolder/$path.gpg\" --encrypt"
+    for i in ${_arg_emails[@]}; do
+        command+=" --recipient \"$i\""
+    done
+    command+=" $file"
+    eval $command
+}
+
+function checkFiles {
+    local path=$1
+
+    findCommand="find \"$path\" -maxdepth 1"
+    if [ "$_arg_all" = "off" ]; then
+        findCommand+=" ! -path \"*/.*\"";
+    fi
+    findCommand+=" -type f"
+
+    eval $findCommand | while read i
+    do
+        if [ ! -f "../$backupFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+            encryptFile "$i" "$i"
+        fi
+    done
+}
+
+function handleDir {
+    local depth=$1
+    local path=$2
+
+    # Create necessary folders
+    if [ "$path" = "." ]; then
+        mkdir -p "../$backupFolder"
+        mkdir "../$tmpFolder"
+        cp "decrypt.sh" "../$backupFolder/decrypt.sh"
+        cp "pgpbackup-decrypt" "../$backupFolder/pgpbackup-decrypt" > /dev/null
+    fi
+
+    if [ $depth -eq 0 ]; then
+        local oldPath=$PWD
+        if [ "$path" = "." ]; then
+            folderPath="."
+            folderName="backup"
+        else
+            cd "$path"
+            folderPath="$(dirname "$path")"
+            folderName="$(basename "$path")"
+        fi
+
+        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
+        if [ "$_arg_all" = false ]; then
+            findCommand+="! -path \"*/.*\""
+        fi
+
+        eval $findCommand | while read i
+        do
+            zip -qur "$oldPath/../$tmpFolder/$folderPath/$folderName.pb.zip" "./$i"
+        done
+        cd "$oldPath"
+        if [ "$path" == "." ]; then
+            path=$folderName
+        fi
+        if [ -f "../$tmpFolder/$path.pb.zip" ]; then
+            encryptFile "../$tmpFolder/$path.pb.zip" "$path.zip"
+        fi
+    else
+        if [ "$path" != "." ]; then
+            mkdir "../backup/$path"
+            mkdir "../$tmpFolder/$path"
+        fi
+
+        # Handle files in directory
+        checkFiles "$path"
+
+        # Handle directories in directory
+        findCommand="find \"$path\" -maxdepth 1 ! -path \"$path\""
+        if [ "$_arg_all" = "off" ]; then
+            findCommand+=" ! -path \"*/.*\""
+        fi
+        findCommand+=" -type d"
+
+        eval $findCommand | while read i
+        do
+            if [ $depth -gt 0 ]; then
+                handleDir $[$depth-1] "$i"
+            elif [ $depth -lt 0 ]; then
+                handleDir $depth "$i"
+            fi
+        done
+    fi
+}
+
+function addSpacingToOverviewFile {
+    local depth=$1
+    local file=$2
+
+    for (( ; depth>0; depth-- ))
+    do
+        if [ $depth -eq 1 ] && [ $file -eq 1 ]; then
+            printf "| "
+        elif [ $depth -eq 1 ] && [ $file -eq 0 ]; then
+            printf "|_"
+        else
+            printf "  "
+        fi
+    done
+}
+
+function createOverviewFile {
+    local path=$1
+    local depth=$2
+    local overviewFile=$3
+
+    findCommand="find \"$path\" -mindepth 1 -maxdepth 1"
+    if [ "$_arg_all" = "off" ]; then
+        findCommand+=" ! -path \"*/.*\""
+    fi
+
+    # Add files to overview file
+    eval "$findCommand -type f" | while read i
+    do
+        addSpacingToOverviewFile $depth 1 >> "$overviewFile"
+        local name=$(basename "$i")
+        if [[ $name == *.gpg ]]; then
+            printf "%s (%s)\n" "${name::-4}" $(hashName "$name") >> "$overviewFile"
+        else
+            printf "%s\n" "$name" >> "$overviewFile"
+        fi
+    done
+
+    # Add directories to overview file
+    eval "$findCommand -type d" | while read i
+    do
+        addSpacingToOverviewFile $depth 0 >> "$overviewFile"
+        printf "%s (%s)\n" $(basename "$i") $(hashName $(basename "$i")) >> "$overviewFile"
+        createOverviewFile "$i" $[$depth + 1] "$overviewFile"
+    done
+}
+
+# Main code
+handleDir $depth $email .
+
+if [ "$_arg_hash_names" = "on" ]; then
+    # Create overview file
+    cd "../backup"
+    overviewFile="overview.txt"
+    createOverviewFile "." 0 "$overviewFile"
+
+    # Hash file names
+    find "." -depth -iname "*.gpg" -type f | while read i
+    do
+        # Hash filename
+        mv "$i" "$(dirname "$i")/$(hashName $(basename "$i")).gpg"
+    done
+
+    # Hash folder names
+    find "." -mindepth 1 -depth -type d | while read j
+    do
+        path=$(dirname "$j")
+        name=$(basename "$j")
+        hashedName=$(hashName "$name")
+        touch "$path/foldernames.txt"
+        echo "$hashedName;$name" >> "$path/foldernames.txt"
+        mv "$j" "$(dirname "$j")/$hashedName"
+    done
+    find "." -type f -iname "foldernames.txt" | while read j
+    do
+        encryptFile "$j" "$j" 0
+        rm "$j"
+    done
+
+    # Encrypt overview file
+    encryptFile "$overviewFile" "$overviewFile"
+    rm "$overviewFile"
+fi
+
+# Tidy up
+rm -r "../$tmpFolder"
+
+echo "Finished encrypting!"
+exit 0
+# ] <-- needed because of Argbash

@@ -1,0 +1,118 @@
+#!/bin/bash
+
+#TODO: Documentation
+
+progname="PGP-Backup"
+libname="Decryption"
+version="__VERSION__"
+
+# ARG_OPTIONAL_BOOLEAN([unpack],[u],[Unpacks all archives from pgpbackup-encrypt])
+# ARG_HELP([short program description (optional)],[long program description (optional)])
+# ARG_VERSION([echo $version])
+# ARGBASH_GO()
+
+# [ <-- needed because of Argbash
+
+echo "$progname $version - $libname"
+
+# Determine which tmp folder to use
+if [ -d "../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "../tmp$i" ]; then
+            tmp="tmp$i"
+            break
+        fi
+    done
+else
+    tmp="tmp"
+fi
+readonly tmpFolder=$tmp
+
+# Check if decrypted folder exists
+readonly decryptFolder="decrypted"
+if [ -d "../$decryptFolder" ]; then
+    echo "The decrypt folder is already existing."
+    echo "Aborted."
+    exit 1
+fi
+
+function urldecode {
+    : "${*//+/ }"
+    echo -e "${_//%/\\x}"
+}
+
+function decrypt {
+    local path=$1
+
+    find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
+    do
+        oldPath=$PWD
+        cd "../$tmpFolder"
+        origFileName=$(gpg -q --status-fd 1 --use-embedded-filename "$oldPath/$j" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
+        origFileName=$(urldecode "$origFileName")
+        origFile="$(dirname "$j")/$origFileName"
+        mv "$origFileName" "../$decryptFolder/$origFile"
+        if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
+            cd "../$decryptFolder"
+            folderName=${origFile::-7}
+            if [[ "$origFile" = *backup.pb.zip ]]; then
+                folderName="."
+            fi
+            unzip -q "$origFile" -d "$folderName"
+            rm "$origFile"
+        elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
+            cd "../$decryptFolder"
+            folderName=${origFile::-7}
+            mv "$origFile" "$folderName.zip"
+        fi
+        cd "$oldPath"
+    done
+
+    find "$path" -mindepth 1 -maxdepth 1 -type d | while read j
+    do
+        decrypt "$j"
+    done
+}
+
+mkdir "../$tmpFolder"
+mkdir "../$decryptFolder"
+
+find . -depth ! -path . -type d | while read i
+do
+    mkdir -p "../$decryptFolder/$i"
+done
+
+decrypt "."
+
+# Restore folder names
+oldPath=$PWD
+cd "../$decryptFolder"
+find "." -mindepth 1 -depth -type d | while read j
+do
+    path=$(dirname "$j")
+    hashedName=$(basename "$j")
+    pattern="^${hashedName};.*$"
+    if [ -f "$path/foldernames.txt" ]; then
+        name=$(grep -E "$pattern" "$path/foldernames.txt" | cut -f 2 -d ";")
+        if [ "$name" != "" ]; then
+            mv "$j" "$path/$name"
+        fi
+    fi
+done
+
+find "." -type f -iname "foldernames.txt" | while read j
+do
+    rm "$j"
+done
+
+# Copy decrypt stuff to decrypted folder
+cp "$oldPath/decrypt.sh" "decrypt.sh"
+cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
+
+# Tidy up
+rm -r "../$tmpFolder"
+
+echo "Finished decrypting!"
+exit 0
+# ] <-- needed because of Argbash
