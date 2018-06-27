@@ -4,7 +4,7 @@
 
 progname="PGP-Backup"
 libname="Encryption"
-version="v0.2.0-alpha.4"
+version="__VERSION__"
 
 # ARG_POSITIONAL_DOUBLEDASH()
 # ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
