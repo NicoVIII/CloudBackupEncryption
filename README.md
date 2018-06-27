@@ -19,14 +19,14 @@ If you install the `.deb` package, you do not need the scripts `pgpbackup-encryp
 ## Usage
 
 ### Encryption
-1. Put both `.sh` files into the folder which contents you want to encrypt. If you want to use the libraries in the portable version, also add `pgpbackup-encrypt` and `pgpbackup-decrypt`.
+1. Put both `.sh` and `pgpbackup-encrypt` and `pgpbackup-decrypt` files into the folder which contents you want to encrypt.
 2. Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key. If you want to encrypt the backup for multiple keys, just add the other email addresses after the first one.
 3. Configure encryption in `encrypt.sh`. Look up the options at [Options / encrypt](#encrypt)
 4. You should configure decryption in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decrypt](#decrypt)
-5. Make `encrypt.sh` and (if exists) `pgpbackup-encrypt` executable and execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
+5. Execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
 
 ### Decryption
-1. The files `decrypt.sh` and (if exists) `pgpbackup-decrypt` should not be encrypted. Make them executable in the backup you created.
+1. The files `decrypt.sh` and `pgpbackup-decrypt` should not be encrypted. If both are available you should be able to decrypt the backup.
 2. Execute `decrypt.sh`.
 
 ## Options
@@ -35,10 +35,17 @@ These are the options and flags you can use with the files and insert into `encr
 ### encrypt
 `-a | --(no-)all` : include hidden files  
 `-d | --depth <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
-`-n | --(no-)hash-names` : hash filenames (enabled by default)
+`-h | --help` : Prints help  
+`-n | --(no-)name-hashing` : hash filenames (enabled by default)  
+`--(no-)hash-names` : hash filenames (deprecated, use --name-hashing instead)  
+`-v | --version` : Prints version  
+`-V | --(no-)verbose` : Prints more information about what the script is doing
 
 ### decrypt
-`-u | --(no-)unpack` : unpacks all decrypted archives
+`-h | --help` : Prints help  
+`-u | --(no-)unpack` : unpacks all decrypted archives  
+`-v | --version` : Prints version  
+`-V | --(no-)verbose` : Prints more information about what the script is doing
 
 ## Examples
 
