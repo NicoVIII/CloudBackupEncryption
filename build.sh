@@ -49,4 +49,25 @@ fi
 # Clean up
 rm -r "tmp"
 echo "Finished."
-exit 0
+
+# Test
+if [ "$type" == "test" ]; then
+    echo
+    echo "Test, if build was successful."
+    error=0
+    if [ ! -f "./deploy/pgpbackup-encrypt" ]; then
+        echo "Error: Did not find 'deploy/pgpbackup-encrypt!"
+        error=1
+    else
+        echo "Found 'deploy/pgpbackup-encrypt'."
+    fi
+    if [ ! -f "./deploy/pgpbackup-decrypt" ]; then
+        echo "Error: Did not find 'deploy/pgpbackup-decrypt!"
+        error=1
+    else
+        echo "Found 'deploy/pgpbackup-decrypt'."
+    fi
+    exit $error
+else
+    exit 0
+fi

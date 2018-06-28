@@ -1,0 +1,9 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+
+build-script:
+  stage: build
+  script: ./build.sh test
