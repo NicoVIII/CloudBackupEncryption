@@ -119,3 +119,6 @@ folder
    |  folder2.zip.gpg
    |  folder3.zip.gpg
 ```
+
+## Development
+[![pipeline status](https://gitlab.com/NicoVIII/PGP-Backup/badges/master/pipeline.svg)](https://gitlab.com/NicoVIII/PGP-Backup/commits/master)
