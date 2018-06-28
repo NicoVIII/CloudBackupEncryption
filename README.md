@@ -120,4 +120,4 @@ folder
 ```
 
 ## Development
-[![pipeline status](https://gitlab.com/NicoVIII/PGP-Backup/badges/master/pipeline.svg)](https://gitlab.com/NicoVIII/PGP-Backup/commits/master)
+[![pipeline status](https://gitlab.com/NicoVIII/PGP-Backup/badges/develop/pipeline.svg)](https://gitlab.com/NicoVIII/PGP-Backup/commits/develop)
