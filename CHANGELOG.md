@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.3.0
+[WIP]
+
 ## v0.2.1
 ### Features
 * add `--verbose` flag to both libraries to extend the output
