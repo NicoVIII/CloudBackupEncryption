@@ -72,15 +72,15 @@ function decrypt {
 
     find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
     do
-        oldPath=$PWD
-        cd "$tmpFolder"
-        command="gpg -q --status-fd 1 --use-embedded-filename \"$inFolder/$j\""
+        command="gpg -q --status-fd 1 --use-embedded-filename --output \"$tmpFolder/tmpfile\" \"$j\""
         origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
         origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
-        origFile="$(dirname "$j")/$origFileName"
-        mv "$origFileName" "$outFolder/${origFile#"$inFolder"}"
+        origFile="$(dirname "$j")"
+        origFile="$outFolder/${origFile#$inFolder}/$origFileName"
+        echo "$origFileName"
+        echo "$origFile"
+        mv "$tmpFolder/tmpfile" "$origFile"
         if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "$outFolder"
             folderName=${origFile::-7}
             if [[ "$origFile" = *backup.pb.zip ]]; then
                 folderName="."
@@ -89,11 +89,9 @@ function decrypt {
             execute "$command"
             rm "$origFile"
         elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "$outFolder"
             folderName=${origFile::-7}
             mv "$origFile" "$folderName.zip"
         fi
-        cd "$oldPath"
     done
 
     find "$path" -mindepth 1 -maxdepth 1 -type d | while read j
@@ -124,8 +122,7 @@ done
 decrypt "$inFolder"
 
 # Restore folder names
-cd "$outFolder"
-find "." -mindepth 1 -depth -type d | while read j
+find "$outFolder" -mindepth 1 -depth -type d | while read j
 do
     path=$(dirname "$j")
     hashedName=$(basename "$j")
@@ -138,7 +135,7 @@ do
     fi
 done
 
-find "$inFolder" -type f -iname "foldernames.txt" | while read j
+find "$outFolder" -type f -iname "foldernames.txt" | while read j
 do
     rm "$j"
 done

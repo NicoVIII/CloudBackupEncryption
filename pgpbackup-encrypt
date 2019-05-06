@@ -81,7 +81,7 @@ function encryptFile {
     local file=$1
     local path=$2
 
-    local command="gpg -q --output \"$outFolder/${path#"$inFolder"}.gpg\" --encrypt"
+    local command="gpg -q --output \"$path.gpg\" --encrypt"
     for i in ${_arg_recipient[@]}; do
         command+=" --recipient \"$i\""
     done
@@ -101,7 +101,7 @@ function checkFiles {
     eval $findCommand | while read i
     do
         if [ ! -f "$outFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
-            encryptFile "$i" "$i"
+            encryptFile "$i" "$outFolder/${i#"$inFolder"}"
         fi
     done
 }
@@ -192,7 +192,7 @@ function addSpacingToOverviewFile {
 function createOverviewFile {
     local path=$1
     local depth=$2
-    local overviewFile=$3
+    local overviewFile="$3"
 
     findCommand="find \"$path\" -mindepth 1 -maxdepth 1"
     if [ "$_arg_all" = "off" ]; then
@@ -239,28 +239,27 @@ handleDir $depth $email $inFolder
 
 if [ "$_arg_name_hashing" = "on" ]; then
     # Create overview file
-    cd "$outFolder"
-    overviewFile="overview.txt"
-    createOverviewFile "." 0 "$overviewFile"
+    overviewFile="$outFolder/overview.txt"
+    createOverviewFile "$outFolder" 0 "$overviewFile"
 
     # Hash file names
-    find "." -depth -iname "*.gpg" -type f | while read i
+    find "$outFolder" -depth -iname "*.gpg" -type f | while read i
     do
         # Hash filename
         mv "$i" "$(dirname "$i")/$(hashName $(basename "$i")).gpg"
     done
 
     # Hash folder names
-    find "." -mindepth 1 -depth -type d | while read j
+    find "$outFolder" -mindepth 1 -depth -type d | while read j
     do
-        path=$(dirname "$j")
-        name=$(basename "$j")
-        hashedName=$(hashName "$name")
+        path="$(dirname "$j")"
+        name="$(basename "$j")"
+        hashedName="$(hashName "$name")"
         touch "$path/foldernames.txt"
         echo "$hashedName;$name" >> "$path/foldernames.txt"
         mv "$j" "$(dirname "$j")/$hashedName"
     done
-    find "." -type f -iname "foldernames.txt" | while read j
+    find "$outFolder" -type f -iname "foldernames.txt" | while read j
     do
         encryptFile "$j" "$j" 0
         rm "$j"
