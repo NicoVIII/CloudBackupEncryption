@@ -8,6 +8,7 @@ version="__VERSION__"
 
 # ARG_POSITIONAL_DOUBLEDASH()
 # ARG_POSITIONAL_SINGLE([input], [Folder to decrypt], ["."])
+# ARG_OPTIONAL_SINGLE([output], [o], [Folder to store decrypted files], ["../decrypted"])
 # ARG_OPTIONAL_BOOLEAN([unpack],[u],[Unpacks all archives from pgpbackup-encrypt])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
@@ -16,6 +17,23 @@ version="__VERSION__"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
+
+readonly inFolder="$_arg_input"
+readonly outFolder="$_arg_output"
+
+# Determine which tmp folder to use
+if [ -d "$outFolder/../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "$outFolder/../tmp$i" ]; then
+            tmp="tmp$i"
+            break
+        fi
+    done
+else
+    tmp="tmp"
+fi
+readonly tmpFolder="$outFolder/../$tmp"
 
 # Functions
 function printHelper {
@@ -41,31 +59,36 @@ function printVerbose {
     printHelper "$message" "on"
 }
 
+function execute {
+    local command=$1
+
+    printVerbose "> $command"
+    eval "$command"
+}
+
 function decrypt {
     local path=$1
 
     find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
     do
         oldPath=$PWD
-        cd "../$tmpFolder"
+        cd "$tmpFolder"
         command="gpg -q --status-fd 1 --use-embedded-filename \"$oldPath/$j\""
-        printVerbose "> $command"
         origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
         origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
         origFile="$(dirname "$j")/$origFileName"
-        mv "$origFileName" "../$decryptFolder/$origFile"
+        mv "$origFileName" "$outFolder/${origFile#"$inFolder"}"
         if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "../$decryptFolder"
+            cd "$outFolder"
             folderName=${origFile::-7}
             if [[ "$origFile" = *backup.pb.zip ]]; then
                 folderName="."
             fi
             command="unzip -q \"$origFile\" -d \"$folderName\""
-            printVerbose "> $command"
-            eval $command
+            execute "$command"
             rm "$origFile"
         elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "../$decryptFolder"
+            cd "$outFolder"
             folderName=${origFile::-7}
             mv "$origFile" "$folderName.zip"
         fi
@@ -81,45 +104,26 @@ function decrypt {
 # Start of program
 printLog "$progname $version - $libname"
 
-origPath="$PWD"
-cd "$_arg_input"
-
-# Determine which tmp folder to use
-if [ -d "../tmp" ]; then
-    for i in {1..9}
-    do
-        if [ ! -d "../tmp$i" ]; then
-            tmp="tmp$i"
-            break
-        fi
-    done
-else
-    tmp="tmp"
-fi
-readonly tmpFolder=$tmp
-
 # Check if decrypted folder exists
-readonly decryptFolder="decrypted"
-if [ -d "../$decryptFolder" ]; then
+if [ -d "$outFolder" ]; then
     printLog "The decrypt folder is already existing."
     printLog "Aborted."
     exit 1
 fi
 
-mkdir "../$tmpFolder"
-mkdir "../$decryptFolder"
+mkdir -p "$outFolder"
+mkdir "$tmpFolder"
 
-find . -depth ! -path . -type d | while read i
+find "$inFolder" -depth ! -path . -type d | while read i
 do
-    mkdir -p "../$decryptFolder/$i"
+    mkdir -p "$outFolder/"${i#"$inFolder"}
 done
 
-decrypt "."
+decrypt "$inFolder"
 
 # Restore folder names
-oldPath=$PWD
-cd "../$decryptFolder"
-find "." -mindepth 1 -depth -type d | while read j
+cd "$outFolder"
+find "$inFolder" -mindepth 1 -depth -type d | while read j
 do
     path=$(dirname "$j")
     hashedName=$(basename "$j")
@@ -132,19 +136,17 @@ do
     fi
 done
 
-find "." -type f -iname "foldernames.txt" | while read j
+find "$inFolder" -type f -iname "foldernames.txt" | while read j
 do
     rm "$j"
 done
 
 # Copy decrypt stuff to decrypted folder
-cp "$oldPath/decrypt.sh" "decrypt.sh" 2> /dev/null
-cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" 2> /dev/null
+cp "$inPath/decrypt.sh" "decrypt.sh" 2> /dev/null
+cp "$inPath/pgpbackup-decrypt" "pgpbackup-decrypt" 2> /dev/null
 
 # Tidy up
-rm -r "../$tmpFolder"
-
-cd $origPath
+rm -r "$tmpFolder"
 
 printLog "Finished decrypting!"
 exit 0

@@ -9,6 +9,7 @@ version="__VERSION__"
 # ARG_POSITIONAL_DOUBLEDASH()
 # ARG_POSITIONAL_SINGLE([input], [Folder to encrypt], ["."])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
+# ARG_OPTIONAL_SINGLE([output], [o], [Folder to store encrypted files], ["../backup"])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
 # ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names],[on])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
@@ -19,6 +20,24 @@ version="__VERSION__"
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
+
+readonly inFolder="$_arg_input"
+readonly outFolder="$_arg_output"
+depth=$_arg_depth
+
+# Determine which tmp folder to use
+if [ -d "$outFolder/../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "$outFolder/../tmp$i" ]; then
+            tmp="tmp$i"
+            break
+        fi
+    done
+else
+    tmp="tmp"
+fi
+readonly tmpFolder="$outFolder/../$tmp"
 
 # Functions
 function printHelper {
@@ -50,17 +69,23 @@ function hashName {
     echo "${_arg_emails[0]}-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
 }
 
+function execute {
+    local command=$1
+
+    printVerbose "> $command"
+    eval "$command"
+}
+
 function encryptFile {
     local file=$1
     local path=$2
 
-    local command="gpg -q --output \"../$backupFolder/$path.gpg\" --encrypt"
+    local command="gpg -q --output \"$outFolder/${path#"$inFolder"}.gpg\" --encrypt"
     for i in ${_arg_recipient[@]}; do
         command+=" --recipient \"$i\""
     done
     command+=" \"$file\""
-    printVerbose "> $command"
-    eval $command
+    execute "$command"
 }
 
 function checkFiles {
@@ -74,7 +99,7 @@ function checkFiles {
 
     eval $findCommand | while read i
     do
-        if [ ! -f "../$backupFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+        if [ ! -f "$outFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             encryptFile "$i" "$i"
         fi
     done
@@ -85,17 +110,17 @@ function handleDir {
     local path=$2
 
     # Create necessary folders
-    if [ "$path" = "." ]; then
-        mkdir -p "../$backupFolder"
-        mkdir "../$tmpFolder"
-        cp "decrypt.sh" "../$backupFolder/decrypt.sh" 2> /dev/null
-        cp "pgpbackup-decrypt" "../$backupFolder/pgpbackup-decrypt" > /dev/null
+    if [ "$path" = "$inFolder" ]; then
+        mkdir -p "$outFolder"
+        mkdir "$tmpFolder"
+        cp "$inFolder/decrypt.sh" "$outFolder/decrypt.sh" 2> /dev/null
+        cp "$inFolder/pgpbackup-decrypt" "$outFolder/pgpbackup-decrypt" 2> /dev/null
     fi
 
     if [ $depth -eq 0 ]; then
         local oldPath=$PWD
-        if [ "$path" = "." ]; then
-            folderPath="."
+        if [ "$path" = "$inFolder" ]; then
+            folderPath="$inFolder"
             folderName="backup"
         else
             cd "$path"
@@ -103,28 +128,27 @@ function handleDir {
             folderName="$(basename "$path")"
         fi
 
-        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
+        findCommand="find \"$inFolder\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
         if [ "$_arg_all" = false ]; then
             findCommand+="! -path \"*/.*\""
         fi
 
         eval $findCommand | while read i
         do
-            command="zip -qur \"$oldPath/../$tmpFolder/$folderPath/$folderName.pb.zip\" \"./$i\""
-            printVerbose "> $command"
-            eval $command
+            command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"$inFolder/$i\""
+            execute "$command"
         done
         cd "$oldPath"
-        if [ "$path" == "." ]; then
+        if [ "$path" == "$inFolder" ]; then
             path=$folderName
         fi
-        if [ -f "../$tmpFolder/$path.pb.zip" ]; then
-            encryptFile "../$tmpFolder/$path.pb.zip" "$path.zip"
+        if [ -f "$tmpFolder/$path.pb.zip" ]; then
+            encryptFile "$tmpFolder/$path.pb.zip" "$path.zip"
         fi
     else
-        if [ "$path" != "." ]; then
-            mkdir "../backup/$path"
-            mkdir "../$tmpFolder/$path"
+        if [ "$path" != "$inFolder" ]; then
+            mkdir "$outFolder/"${path#"$inFolder"}
+            mkdir "$tmpFolder/"${path#"$inFolder"}
         fi
 
         # Handle files in directory
@@ -198,30 +222,10 @@ function createOverviewFile {
 # Start of program
 printLog "$progname $version - $libname"
 
-depth=$_arg_depth
-
-origPath="$PWD"
-cd "$_arg_input"
-
-# Determine which tmp folder to use
-if [ -d "../tmp" ]; then
-    for i in {1..9}
-    do
-        if [ ! -d "../tmp$i" ]; then
-            tmp="tmp$i"
-            break
-        fi
-    done
-else
-    tmp="tmp"
-fi
-readonly tmpFolder=$tmp
-
 # Delete old backup folder, if existing
-readonly backupFolder="backup"
-if [ -d "../$backupFolder" ]; then
-    if [ -f "../$backupFolder/decrypt.sh" ]; then
-        rm -r "../$backupFolder"
+if [ -d "$outFolder" ]; then
+    if [ -f "$outFolder/decrypt.sh" ]; then
+        rm -r "$outFolder"
         printLog "Removed existing backup folder."
     else
         printLog "The backup folder is already existing."
@@ -230,12 +234,11 @@ if [ -d "../$backupFolder" ]; then
     fi
 fi
 
-# Main code
-handleDir $depth $email .
+handleDir $depth $email $inFolder
 
 if [ "$_arg_name_hashing" = "on" ]; then
     # Create overview file
-    cd "../backup"
+    cd "$outFolder"
     overviewFile="overview.txt"
     createOverviewFile "." 0 "$overviewFile"
 
@@ -268,9 +271,7 @@ if [ "$_arg_name_hashing" = "on" ]; then
 fi
 
 # Tidy up
-rm -r "../$tmpFolder"
-
-cd $origPath
+rm -r "$tmpFolder"
 
 printLog "Finished encrypting!"
 exit 0
