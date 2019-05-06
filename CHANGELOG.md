@@ -4,17 +4,20 @@
 
 \[WIP]
 
+### Breaking changes
+
+-   email for encrypt is now repeatable optional parameter `-r|--recipient` instead of position parameter
+-   remove deprecated `--hash-names`
+
 ### Features
 
 -   add `-q | --quiet` flag to both libraries to suppress all output
-
-### Improvements/Changes
-
--   remove deprecated `--hash-names`
+-   new positional parameter is used for input directory
 
 ### Fixes
 
--   throw no error, if no decrypt.sh is present
+-   throw no error, if no `decrypt.sh` is present in input directory for encryption
+-   if `encrypt.sh` and `decrypt.sh` are executed they now will always use their location as input directory
 
 ### Misc
 

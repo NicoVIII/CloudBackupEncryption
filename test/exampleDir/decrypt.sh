@@ -1,2 +1,2 @@
 #!/bin/bash
-./pgpbackup-decrypt -u
+$(dirname $0)/pgpbackup-decrypt -u $(dirname $0)

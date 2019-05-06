@@ -16,7 +16,7 @@ teardown() {
 }
 
 @test "Basic invoke without depth and without namehashing" {
-    run "./pgpbackup-encrypt" --no-name-hashing -- "$email"
+    run "./pgpbackup-encrypt" --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -29,11 +29,8 @@ teardown() {
     [ -f "../backup/folder1/folder2/file3.file.gpg" ]
     [ -f "../backup/folder1/folder3/file4.file.gpg" ]
 
-    # TODO: Try to workaround issue with #22
-    cd "../backup"
-    run "./pgpbackup-decrypt" -u
+    run "./pgpbackup-decrypt" -u -- "../backup"
     [ "$status" -eq 0 ]
-    cd "../exampleDir"
 
     # Check structure of encrypted files
     [ -f "../decrypted/decrypt.sh" ]
@@ -47,27 +44,21 @@ teardown() {
 }
 
 @test "Test quiet parameter" {
-    run ."/pgpbackup-encrypt" -q --no-name-hashing -- "$email"
+    run ."/pgpbackup-encrypt" -q --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
 
-    # TODO: Try to workaround issue with #22
-    cd "../backup"
-    run "../backup/pgpbackup-decrypt" -qu
+    run "./pgpbackup-decrypt" -qu -- "../backup"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
-    cd "../exampleDir"
 }
 
 @test "Test quiet parameter in combination with verbose parameter" {
-    run "./pgpbackup-encrypt" -qV --no-name-hashing -- "$email"
+    run "./pgpbackup-encrypt" -qV --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
 
-    # TODO: Try to workaround issue with #22
-    cd "../backup"
-    run "../backup/pgpbackup-decrypt" -quV
+    run "./pgpbackup-decrypt" -quV -- "../backup"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
-    cd "../exampleDir"
 }

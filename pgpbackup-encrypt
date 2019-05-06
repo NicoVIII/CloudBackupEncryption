@@ -7,12 +7,13 @@ libname="Encryption"
 version="__VERSION__"
 
 # ARG_POSITIONAL_DOUBLEDASH()
-# ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
+# ARG_POSITIONAL_SINGLE([input], [Folder to encrypt], ["."])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
 # ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names],[on])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
+# ARG_OPTIONAL_REPEATED([recipient], [r], [recipients to encrypt for, is passed through to gpg encrypt command])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
 # ARGBASH_GO()
@@ -54,7 +55,7 @@ function encryptFile {
     local path=$2
 
     local command="gpg -q --output \"../$backupFolder/$path.gpg\" --encrypt"
-    for i in ${_arg_emails[@]}; do
+    for i in ${_arg_recipient[@]}; do
         command+=" --recipient \"$i\""
     done
     command+=" \"$file\""
@@ -199,6 +200,9 @@ printLog "$progname $version - $libname"
 
 depth=$_arg_depth
 
+origPath="$PWD"
+cd "$_arg_input"
+
 # Determine which tmp folder to use
 if [ -d "../tmp" ]; then
     for i in {1..9}
@@ -265,6 +269,8 @@ fi
 
 # Tidy up
 rm -r "../$tmpFolder"
+
+cd $origPath
 
 printLog "Finished encrypting!"
 exit 0

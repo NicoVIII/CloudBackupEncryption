@@ -6,6 +6,8 @@ progname="PGP-Backup"
 libname="Decryption"
 version="__VERSION__"
 
+# ARG_POSITIONAL_DOUBLEDASH()
+# ARG_POSITIONAL_SINGLE([input], [Folder to decrypt], ["."])
 # ARG_OPTIONAL_BOOLEAN([unpack],[u],[Unpacks all archives from pgpbackup-encrypt])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
@@ -38,31 +40,6 @@ function printVerbose {
 
     printHelper "$message" "on"
 }
-
-# Start of program
-printLog "$progname $version - $libname"
-
-# Determine which tmp folder to use
-if [ -d "../tmp" ]; then
-    for i in {1..9}
-    do
-        if [ ! -d "../tmp$i" ]; then
-            tmp="tmp$i"
-            break
-        fi
-    done
-else
-    tmp="tmp"
-fi
-readonly tmpFolder=$tmp
-
-# Check if decrypted folder exists
-readonly decryptFolder="decrypted"
-if [ -d "../$decryptFolder" ]; then
-    printLog "The decrypt folder is already existing."
-    printLog "Aborted."
-    exit 1
-fi
 
 function decrypt {
     local path=$1
@@ -101,6 +78,34 @@ function decrypt {
     done
 }
 
+# Start of program
+printLog "$progname $version - $libname"
+
+origPath="$PWD"
+cd "$_arg_input"
+
+# Determine which tmp folder to use
+if [ -d "../tmp" ]; then
+    for i in {1..9}
+    do
+        if [ ! -d "../tmp$i" ]; then
+            tmp="tmp$i"
+            break
+        fi
+    done
+else
+    tmp="tmp"
+fi
+readonly tmpFolder=$tmp
+
+# Check if decrypted folder exists
+readonly decryptFolder="decrypted"
+if [ -d "../$decryptFolder" ]; then
+    printLog "The decrypt folder is already existing."
+    printLog "Aborted."
+    exit 1
+fi
+
 mkdir "../$tmpFolder"
 mkdir "../$decryptFolder"
 
@@ -138,6 +143,8 @@ cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" 2> /dev/null
 
 # Tidy up
 rm -r "../$tmpFolder"
+
+cd $origPath
 
 printLog "Finished decrypting!"
 exit 0
