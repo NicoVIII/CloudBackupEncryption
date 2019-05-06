@@ -1,4 +1,6 @@
 #!/usr/bin/env bats
+email="nico@nicoviii.net"
+
 setup() {
     cp -R "deploy/." "./test/exampleDir/"
     cd "./test/exampleDir"
@@ -13,7 +15,7 @@ teardown() {
 }
 
 @test "Basic invoke without depth and without namehashing" {
-    run ./pgpbackup-encrypt --no-name-hashing -- nico@nicoviii.net
+    run ./pgpbackup-encrypt --no-name-hashing -- "$email"
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -25,4 +27,16 @@ teardown() {
     [ -f "../backup/folder1/file2.file.gpg" ]
     [ -f "../backup/folder1/folder2/file3.file.gpg" ]
     [ -f "../backup/folder1/folder3/file4.file.gpg" ]
+}
+
+@test "Test quiet parameter" {
+    run ./pgpbackup-encrypt -q --no-name-hashing -- "$email"
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "Test quiet parameter in combination with verbose parameter" {
+    run ./pgpbackup-encrypt -qV --no-name-hashing -- "$email"
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
 }
