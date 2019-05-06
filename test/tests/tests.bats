@@ -43,6 +43,32 @@ teardown() {
     [ -f "../decrypted/folder1/folder3/file4.file" ]
 }
 
+@test "Basic invoke without depth but with namehashing" {
+    run "./pgpbackup-encrypt" -r "$email"
+    [ "$status" -eq 0 ]
+
+    # Check for some key files
+    [ -f "../backup/decrypt.sh" ]
+    [ -f "../backup/pgpbackup-decrypt" ]
+    [ -f "../backup/overview.txt.gpg" ]
+    [ -f "../backup/foldernames.txt.gpg" ]
+
+    run "./pgpbackup-decrypt" -u -- "../backup"
+    [ "$status" -eq 0 ]
+
+    # Check structure of encrypted files
+    [ -f "../decrypted/decrypt.sh" ]
+    [ -f "../decrypted/encrypt.sh" ]
+    [ -f "../decrypted/pgpbackup-decrypt" ]
+    [ -f "../decrypted/pgpbackup-encrypt" ]
+    [ -f "../decrypted/overview.txt" ]
+    [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/folder1/file2.file" ]
+    [ -f "../decrypted/folder1/folder2/file3.file" ]
+    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ ! -f "../decrypted/foldernames.txt" ]
+}
+
 @test "Test quiet parameter" {
     run ."/pgpbackup-encrypt" -q --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
