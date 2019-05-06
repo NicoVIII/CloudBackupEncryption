@@ -88,7 +88,7 @@ function handleDir {
     if [ "$path" = "." ]; then
         mkdir -p "../$backupFolder"
         mkdir "../$tmpFolder"
-        cp "decrypt.sh" "../$backupFolder/decrypt.sh"
+        cp "decrypt.sh" "../$backupFolder/decrypt.sh" 2> /dev/null
         cp "pgpbackup-decrypt" "../$backupFolder/pgpbackup-decrypt" > /dev/null
     fi
 

@@ -1,3 +1,5 @@
 /tmp/
 /deploy/
 /deb/
+/test/backup/
+/test/exampleDir/pgpbackup-*
