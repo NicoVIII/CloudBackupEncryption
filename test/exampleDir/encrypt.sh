@@ -1,2 +1,2 @@
 #!/bin/bash
-# Just a mocking version for testing
+./pgpbackup-encrypt --no-name-hashing -- nico@nicoviii.net

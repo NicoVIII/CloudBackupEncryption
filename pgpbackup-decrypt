@@ -8,6 +8,7 @@ version="__VERSION__"
 
 # ARG_OPTIONAL_BOOLEAN([unpack],[u],[Unpacks all archives from pgpbackup-encrypt])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
+# ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
 # ARGBASH_GO()
@@ -132,8 +133,8 @@ do
 done
 
 # Copy decrypt stuff to decrypted folder
-cp "$oldPath/decrypt.sh" "decrypt.sh"
-cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
+cp "$oldPath/decrypt.sh" "decrypt.sh" 2> /dev/null
+cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" 2> /dev/null
 
 # Tidy up
 rm -r "../$tmpFolder"
