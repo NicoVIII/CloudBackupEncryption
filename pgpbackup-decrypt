@@ -22,10 +22,11 @@ readonly inFolder="$_arg_input"
 readonly outFolder="$_arg_output"
 
 # Determine which tmp folder to use
-if [ -d "$outFolder/../tmp" ]; then
+readonly rootFolder=$(dirname $outFolder)
+if [ -d "$rootFolder/tmp" ]; then
     for i in {1..9}
     do
-        if [ ! -d "$outFolder/../tmp$i" ]; then
+        if [ ! -d "$rootFolder/tmp$i" ]; then
             tmp="tmp$i"
             break
         fi
@@ -33,7 +34,7 @@ if [ -d "$outFolder/../tmp" ]; then
 else
     tmp="tmp"
 fi
-readonly tmpFolder="$outFolder/../$tmp"
+readonly tmpFolder="$rootFolder/$tmp"
 
 # Functions
 function printHelper {
@@ -73,7 +74,7 @@ function decrypt {
     do
         oldPath=$PWD
         cd "$tmpFolder"
-        command="gpg -q --status-fd 1 --use-embedded-filename \"$oldPath/$j\""
+        command="gpg -q --status-fd 1 --use-embedded-filename \"$inFolder/$j\""
         origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
         origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
         origFile="$(dirname "$j")/$origFileName"
@@ -111,6 +112,7 @@ if [ -d "$outFolder" ]; then
     exit 1
 fi
 
+# Create out structure
 mkdir -p "$outFolder"
 mkdir "$tmpFolder"
 
@@ -123,7 +125,7 @@ decrypt "$inFolder"
 
 # Restore folder names
 cd "$outFolder"
-find "$inFolder" -mindepth 1 -depth -type d | while read j
+find "." -mindepth 1 -depth -type d | while read j
 do
     path=$(dirname "$j")
     hashedName=$(basename "$j")
@@ -142,8 +144,8 @@ do
 done
 
 # Copy decrypt stuff to decrypted folder
-cp "$inPath/decrypt.sh" "decrypt.sh" 2> /dev/null
-cp "$inPath/pgpbackup-decrypt" "pgpbackup-decrypt" 2> /dev/null
+cp "$inFolder/decrypt.sh" "$outFolder/decrypt.sh" 2> /dev/null
+cp "$inFolder/pgpbackup-decrypt" "$outFolder/pgpbackup-decrypt" 2> /dev/null
 
 # Tidy up
 rm -r "$tmpFolder"

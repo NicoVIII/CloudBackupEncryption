@@ -26,10 +26,11 @@ readonly outFolder="$_arg_output"
 depth=$_arg_depth
 
 # Determine which tmp folder to use
-if [ -d "$outFolder/../tmp" ]; then
+readonly rootFolder=$(dirname $outFolder)
+if [ -d "$rootFolder/tmp" ]; then
     for i in {1..9}
     do
-        if [ ! -d "$outFolder/../tmp$i" ]; then
+        if [ ! -d "$rootFolder/tmp$i" ]; then
             tmp="tmp$i"
             break
         fi
@@ -37,7 +38,7 @@ if [ -d "$outFolder/../tmp" ]; then
 else
     tmp="tmp"
 fi
-readonly tmpFolder="$outFolder/../$tmp"
+readonly tmpFolder="$rootFolder/$tmp"
 
 # Functions
 function printHelper {
