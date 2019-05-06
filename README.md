@@ -4,6 +4,7 @@
 [![GitHub Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)](https://github.com/NicoVIII/PGP-Backup/releases/latest)
 [![Github Pre-Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup/all.svg?label=prerelease)](https://github.com/NicoVIII/PGP-Backup/releases)
 [![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e3e62b15d1b34e598da5aeaf3cd20817?branch=production)](https://www.codacy.com/app/NicoVIII/PGP-Backup?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=NicoVIII/PGP-Backup&amp;utm_campaign=Badge_Grade)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
 Because this project consists out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
@@ -128,3 +129,4 @@ The encrypted filestructure looks like this:
 ## Development
 
 [![pipeline status](https://gitlab.com/NicoVIII/PGP-Backup/badges/master/pipeline.svg)](https://gitlab.com/NicoVIII/PGP-Backup/commits/master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e3e62b15d1b34e598da5aeaf3cd20817)](https://www.codacy.com/app/NicoVIII/PGP-Backup?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=NicoVIII/PGP-Backup&amp;utm_campaign=Badge_Grade)
