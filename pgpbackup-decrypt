@@ -14,7 +14,32 @@ version="__VERSION__"
 
 # [ <-- needed because of Argbash
 
-echo "$progname $version - $libname"
+# Functions
+function printHelper {
+    local message=$1
+    local verbose=$2
+
+    if [ "$_arg_quiet" == "off" ]; then
+        if [ $verbose == "off" ] || [ "$_arg_verbose" == "on" ]; then
+            echo "$message"
+        fi
+    fi
+}
+
+function printLog {
+    local message=$1
+
+    printHelper "$message" "off"
+}
+
+function printVerbose {
+    local message=$1
+
+    printHelper "$message" "on"
+}
+
+# Start of program
+printLog "$progname $version - $libname"
 
 # Determine which tmp folder to use
 if [ -d "../tmp" ]; then
@@ -33,8 +58,8 @@ readonly tmpFolder=$tmp
 # Check if decrypted folder exists
 readonly decryptFolder="decrypted"
 if [ -d "../$decryptFolder" ]; then
-    echo "The decrypt folder is already existing."
-    echo "Aborted."
+    printLog "The decrypt folder is already existing."
+    printLog "Aborted."
     exit 1
 fi
 
@@ -46,9 +71,7 @@ function decrypt {
         oldPath=$PWD
         cd "../$tmpFolder"
         command="gpg -q --status-fd 1 --use-embedded-filename \"$oldPath/$j\""
-        if [ "$_arg_verbose" == "on" ]; then
-            echo "> $command"
-        fi
+        printVerbose "> $command"
         origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
         origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
         origFile="$(dirname "$j")/$origFileName"
@@ -60,9 +83,7 @@ function decrypt {
                 folderName="."
             fi
             command="unzip -q \"$origFile\" -d \"$folderName\""
-            if [ "$_arg_verbose" == "on" ]; then
-                echo "> $command"
-            fi
+            printVerbose "> $command"
             eval $command
             rm "$origFile"
         elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
@@ -117,6 +138,6 @@ cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
 # Tidy up
 rm -r "../$tmpFolder"
 
-echo "Finished decrypting!"
+printLog "Finished decrypting!"
 exit 0
 # ] <-- needed because of Argbash
