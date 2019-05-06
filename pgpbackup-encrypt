@@ -10,7 +10,6 @@ version="__VERSION__"
 # ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
-# ARG_OPTIONAL_BOOLEAN([hash-names],,[Hashes file and directory names (deprecated, use --name-hashing instead)],[on])
 # ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names],[on])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
@@ -230,7 +229,7 @@ fi
 # Main code
 handleDir $depth $email .
 
-if [ "$_arg_name_hashing" = "on" ] && [ "$_arg_hash_names" = "on" ]; then
+if [ "$_arg_name_hashing" = "on" ]; then
     # Create overview file
     cd "../backup"
     overviewFile="overview.txt"

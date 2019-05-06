@@ -4,6 +4,22 @@
 
 \[WIP]
 
+### Features
+
+-   add `-q | --quiet` flag to both libraries to suppress all output
+
+### Improvements/Changes
+
+-   remove deprecated `--hash-names`
+
+### Fixes
+
+-   throw no error, if no decrypt.sh is present
+
+### Misc
+
+-   introduces some automated tests to ensure quality after changes happened
+
 ## v0.2.1
 
 ### Features
