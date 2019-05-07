@@ -15,7 +15,7 @@ teardown() {
     cd "../.."
 }
 
-@test "Basic invoke without depth and without namehashing" {
+@test "Basic invoke" {
     run "./pgpbackup-encrypt" --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
 
@@ -43,7 +43,7 @@ teardown() {
     [ -f "../decrypted/folder1/folder3/file4.file" ]
 }
 
-@test "Basic invoke without depth but with namehashing" {
+@test "Invoke with namehashing" {
     run "./pgpbackup-encrypt" -r "$email"
     [ "$status" -eq 0 ]
 
@@ -69,7 +69,31 @@ teardown() {
     [ ! -f "../decrypted/foldernames.txt" ]
 }
 
-@test "Test quiet parameter" {
+@test "Invoke with depth 0" {
+    run "./pgpbackup-encrypt" -d 0 --no-name-hashing -r "$email"
+    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+    [ "$status" -eq 0 ]
+
+    # Check structure of encrypted files
+    [ -f "../backup/decrypt.sh" ]
+    [ -f "../backup/pgpbackup-decrypt" ]
+    [ -f "../backup/backup.zip.gpg" ]
+
+    run "./pgpbackup-decrypt" -u -- "../backup"
+    [ "$status" -eq 0 ]
+
+    # Check structure of encrypted files
+    [ -f "../decrypted/decrypt.sh" ]
+    [ -f "../decrypted/encrypt.sh" ]
+    [ -f "../decrypted/pgpbackup-decrypt" ]
+    [ -f "../decrypted/pgpbackup-encrypt" ]
+    [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/folder1/file2.file" ]
+    [ -f "../decrypted/folder1/folder2/file3.file" ]
+    [ -f "../decrypted/folder1/folder3/file4.file" ]
+}
+
+@test "Invoke with quiet" {
     run ."/pgpbackup-encrypt" -q --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
@@ -79,7 +103,7 @@ teardown() {
     [ "$output" = "" ]
 }
 
-@test "Test quiet parameter in combination with verbose parameter" {
+@test "Invoke with quiet and verbose" {
     run "./pgpbackup-encrypt" -qV --no-name-hashing -r "$email"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]

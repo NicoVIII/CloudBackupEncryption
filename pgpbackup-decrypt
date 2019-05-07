@@ -18,8 +18,8 @@ version="__VERSION__"
 
 # [ <-- needed because of Argbash
 
-readonly inFolder="$_arg_input"
-readonly outFolder="$_arg_output"
+readonly inFolder="${_arg_input#"/"}"
+readonly outFolder="${_arg_output#"/"}"
 
 # Determine which tmp folder to use
 readonly rootFolder=$(dirname $outFolder)
@@ -83,7 +83,7 @@ function decrypt {
             if [[ "$origFile" = *backup.pb.zip ]]; then
                 folderName="."
             fi
-            command="unzip -q \"$origFile\" -d \"$folderName\""
+            command="unzip -q \"$origFile\" -d \"$outFolder/$folderName\""
             execute "$command"
             rm "$origFile"
         elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then

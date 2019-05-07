@@ -21,8 +21,8 @@ version="__VERSION__"
 
 # [ <-- needed because of Argbash
 
-readonly inFolder="$_arg_input"
-readonly outFolder="$_arg_output"
+readonly inFolder="${_arg_input#"/"}"
+readonly outFolder="${_arg_output#"/"}"
 depth=$_arg_depth
 
 # Determine which tmp folder to use
@@ -119,32 +119,41 @@ function handleDir {
     fi
 
     if [ $depth -eq 0 ]; then
-        local oldPath=$PWD
-        if [ "$path" = "$inFolder" ]; then
-            folderPath="$inFolder"
+        path="$path/."
+        path=${path#"$inFolder/"}
+        if [ "$path" = "." ]; then
+            folderPath="."
             folderName="backup"
         else
-            cd "$path"
             folderPath="$(dirname "$path")"
             folderName="$(basename "$path")"
         fi
 
-        findCommand="find \"$inFolder\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
+        oldPath=$PWD
+        cd "$inFolder"
+
+        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
         if [ "$_arg_all" = false ]; then
             findCommand+="! -path \"*/.*\""
         fi
 
         eval $findCommand | while read i
         do
-            command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"$inFolder/$i\""
+            command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"${i#"$inFolder/"}\""
             execute "$command"
         done
         cd "$oldPath"
-        if [ "$path" == "$inFolder" ]; then
+
+        if [ "$path" == "." ]; then
             path=$folderName
         fi
         if [ -f "$tmpFolder/$path.pb.zip" ]; then
-            encryptFile "$tmpFolder/$path.pb.zip" "$path.zip"
+            encryptFile "$tmpFolder/$path.pb.zip" "$outFolder/$path.zip"
+        else
+            >&2 echo "Error: backup.pb.zip not found! (This is probably a programming error)"
+            >&2 echo "$tmpFolder/$path.pb.zip"
+            rm -r "$tmpFolder"
+            exit 1
         fi
     else
         if [ "$path" != "$inFolder" ]; then
