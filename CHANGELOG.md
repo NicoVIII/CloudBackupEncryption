@@ -8,6 +8,7 @@
 
 -   email for encrypt is now repeatable optional parameter `-r|--recipient` instead of position parameter
 -   remove deprecated `--hash-names`
+-   change default of `--name-hashing` to `"off"`
 
 ### Features
 

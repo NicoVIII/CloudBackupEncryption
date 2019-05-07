@@ -11,7 +11,7 @@ version="__VERSION__"
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
 # ARG_OPTIONAL_SINGLE([output], [o], [Folder to store encrypted files], ["../backup"])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
-# ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names],[on])
+# ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
 # ARG_OPTIONAL_REPEATED([recipient], [r], [recipients to encrypt for, is passed through to gpg encrypt command])

@@ -16,7 +16,7 @@ teardown() {
 }
 
 @test "Basic invoke" {
-    run "./pgpbackup-encrypt" --no-name-hashing -r "$email"
+    run "./pgpbackup-encrypt" -r "$email"
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -44,7 +44,7 @@ teardown() {
 }
 
 @test "Invoke with namehashing" {
-    run "./pgpbackup-encrypt" -r "$email"
+    run "./pgpbackup-encrypt" -n -r "$email"
     [ "$status" -eq 0 ]
 
     # Check for some key files
@@ -70,7 +70,7 @@ teardown() {
 }
 
 @test "Invoke with depth 0" {
-    run "./pgpbackup-encrypt" -d 0 --no-name-hashing -r "$email"
+    run "./pgpbackup-encrypt" -d 0 -r "$email"
     if [ ! "$status" -eq 0 ]; then echo "$output"; fi
     [ "$status" -eq 0 ]
 
@@ -94,7 +94,7 @@ teardown() {
 }
 
 @test "Invoke with quiet" {
-    run ."/pgpbackup-encrypt" -q --no-name-hashing -r "$email"
+    run ."/pgpbackup-encrypt" -q -r "$email"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
 
@@ -104,7 +104,7 @@ teardown() {
 }
 
 @test "Invoke with quiet and verbose" {
-    run "./pgpbackup-encrypt" -qV --no-name-hashing -r "$email"
+    run "./pgpbackup-encrypt" -qV -r "$email"
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
 
