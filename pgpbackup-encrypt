@@ -81,7 +81,7 @@ function encryptFile {
     local file=$1
     local path=$2
 
-    local command="gpg -q --output \"$path.gpg\" --encrypt"
+    local command="gpg --batch --no-tty -q --output \"$path.gpg\" --encrypt"
     for i in ${_arg_recipient[@]}; do
         command+=" --recipient \"$i\""
     done
@@ -229,8 +229,30 @@ function createOverviewFile {
     done
 }
 
+function dependencyMissing {
+    local command=$1
+
+    ! command -v "$command" >/dev/null 2>&1 && echo >&2 "$command command not found!"
+}
+
 # Start of program
 printLog "$progname $version - $libname"
+
+# Check dependencies
+valid="on"
+if dependencyMissing "find"; then valid="off"; fi
+if dependencyMissing "awk"; then valid="off"; fi
+if dependencyMissing "gpg"; then valid="off"; fi
+if dependencyMissing "dirname"; then valid="off"; fi
+if dependencyMissing "basename"; then valid="off"; fi
+if dependencyMissing "rm"; then valid="off"; fi
+if dependencyMissing "mv"; then valid="off"; fi
+if dependencyMissing "cd"; then valid="off"; fi
+if dependencyMissing "zip"; then valid="off"; fi
+
+if [ "$valid" = "off" ]; then
+    exit 1
+fi
 
 # Delete old backup folder, if existing
 if [ -d "$outFolder" ]; then

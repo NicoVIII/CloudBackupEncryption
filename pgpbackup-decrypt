@@ -72,7 +72,7 @@ function decrypt {
 
     find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
     do
-        command="gpg -q --status-fd 1 --use-embedded-filename --output \"$tmpFolder/tmpfile\" \"$j\""
+        command="gpg --batch --no-tty -q --status-fd 1 --use-embedded-filename --output \"$tmpFolder/tmpfile\" \"$j\""
         origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
         origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
         origFile="$(dirname "$j")"
