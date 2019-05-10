@@ -15,6 +15,30 @@ teardown() {
     cd "../.."
 }
 
+@test "Invoke with quiet" {
+    run ."/pgpbackup-encrypt" -q -r "$email"
+    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+
+    run "./pgpbackup-decrypt" -qu -- "../backup"
+    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "Invoke with quiet and verbose" {
+    run "./pgpbackup-encrypt" -qV -r "$email"
+    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+
+    run "./pgpbackup-decrypt" -quV -- "../backup"
+    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
 @test "Basic invoke" {
     run "./pgpbackup-encrypt" -r "$email"
     [ "$status" -eq 0 ]
@@ -29,10 +53,16 @@ teardown() {
     [ -f "../backup/folder1/folder2/file3.file.gpg" ]
     [ -f "../backup/folder1/folder3/file4.file.gpg" ]
 
+    # Check content of encrypted files
+    [ "$(< ../backup/file1.file.gpg)" != "file-one-content" ]
+    [ "$(< ../backup/folder1/file2.file.gpg)" != "file-two-content" ]
+    [ "$(< ../backup/folder1/folder2/file3.file.gpg)" != "file-three-content" ]
+    [ "$(< ../backup/folder1/folder3/file4.file.gpg)" != "file-four-content" ]
+
     run "./pgpbackup-decrypt" -u -- "../backup"
     [ "$status" -eq 0 ]
 
-    # Check structure of encrypted files
+    # Check structure of decrypted files
     [ -f "../decrypted/decrypt.sh" ]
     [ -f "../decrypted/encrypt.sh" ]
     [ -f "../decrypted/pgpbackup-decrypt" ]
@@ -41,6 +71,12 @@ teardown() {
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
     [ -f "../decrypted/folder1/folder3/file4.file" ]
+
+    # Check content of decrypted files
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
 }
 
 @test "Invoke with namehashing" {
@@ -56,7 +92,7 @@ teardown() {
     run "./pgpbackup-decrypt" -u -- "../backup"
     [ "$status" -eq 0 ]
 
-    # Check structure of encrypted files
+    # Check structure of decrypted files
     [ -f "../decrypted/decrypt.sh" ]
     [ -f "../decrypted/encrypt.sh" ]
     [ -f "../decrypted/pgpbackup-decrypt" ]
@@ -67,6 +103,12 @@ teardown() {
     [ -f "../decrypted/folder1/folder2/file3.file" ]
     [ -f "../decrypted/folder1/folder3/file4.file" ]
     [ ! -f "../decrypted/foldernames.txt" ]
+
+    # Check content of decrypted files
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
 }
 
 @test "Invoke with depth 0" {
@@ -82,7 +124,7 @@ teardown() {
     run "./pgpbackup-decrypt" -u -- "../backup"
     [ "$status" -eq 0 ]
 
-    # Check structure of encrypted files
+    # Check structure of decrypted files
     [ -f "../decrypted/decrypt.sh" ]
     [ -f "../decrypted/encrypt.sh" ]
     [ -f "../decrypted/pgpbackup-decrypt" ]
@@ -91,24 +133,44 @@ teardown() {
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
     [ -f "../decrypted/folder1/folder3/file4.file" ]
+
+    # Check content of decrypted files
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
 }
 
-@test "Invoke with quiet" {
-    run ."/pgpbackup-encrypt" -q -r "$email"
+@test "Invoke with depth 1" {
+    run "./pgpbackup-encrypt" -V -d 1 -r "$email"
+    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
     [ "$status" -eq 0 ]
-    [ "$output" = "" ]
+    echo "$output"
 
-    run "./pgpbackup-decrypt" -qu -- "../backup"
-    [ "$status" -eq 0 ]
-    [ "$output" = "" ]
-}
+    # Check structure of encrypted files
+    [ -f "../backup/decrypt.sh" ]
+    [ -f "../backup/pgpbackup-decrypt" ]
+    [ -f "../backup/encrypt.sh.gpg" ]
+    [ -f "../backup/pgpbackup-encrypt.gpg" ]
+    [ -f "../backup/file1.file.gpg" ]
+    [ -f "../backup/folder1.zip.gpg" ]
 
-@test "Invoke with quiet and verbose" {
-    run "./pgpbackup-encrypt" -qV -r "$email"
+    run "./pgpbackup-decrypt" -u -- "../backup"
     [ "$status" -eq 0 ]
-    [ "$output" = "" ]
 
-    run "./pgpbackup-decrypt" -quV -- "../backup"
-    [ "$status" -eq 0 ]
-    [ "$output" = "" ]
+    # Check structure of decrypted files
+    [ -f "../decrypted/decrypt.sh" ]
+    [ -f "../decrypted/encrypt.sh" ]
+    [ -f "../decrypted/pgpbackup-decrypt" ]
+    [ -f "../decrypted/pgpbackup-encrypt" ]
+    [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/folder1/file2.file" ]
+    [ -f "../decrypted/folder1/folder2/file3.file" ]
+    [ -f "../decrypted/folder1/folder3/file4.file" ]
+
+    # Check content of decrypted files
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
 }

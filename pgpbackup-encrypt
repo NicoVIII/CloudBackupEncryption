@@ -121,22 +121,24 @@ function handleDir {
     if [ $depth -eq 0 ]; then
         path="$path/."
         path=${path#"$inFolder/"}
+        echo "Path: $path"
         if [ "$path" = "." ]; then
             folderPath="."
             folderName="backup"
         else
-            folderPath="$(dirname "$path")"
-            folderName="$(basename "$path")"
+            folderPath="$(dirname "${path%"/."}")"
+            folderName="$(basename "${path%"/."}")"
         fi
 
         oldPath=$PWD
-        cd "$inFolder"
+        cd "$inFolder/$path"
 
         findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
         if [ "$_arg_all" = false ]; then
             findCommand+="! -path \"*/.*\""
         fi
 
+        mkdir "$oldPath/$tmpFolder/$folderPath"
         eval $findCommand | while read i
         do
             command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"${i#"$inFolder/"}\""
@@ -147,11 +149,10 @@ function handleDir {
         if [ "$path" == "." ]; then
             path=$folderName
         fi
-        if [ -f "$tmpFolder/$path.pb.zip" ]; then
-            encryptFile "$tmpFolder/$path.pb.zip" "$outFolder/$path.zip"
+        if [ -f "$tmpFolder/${path%"/."}.pb.zip" ]; then
+            encryptFile "$tmpFolder/${path%"/."}.pb.zip" "$outFolder/${path%"/."}.zip"
         else
-            >&2 echo "Error: backup.pb.zip not found! (This is probably a programming error)"
-            >&2 echo "$tmpFolder/$path.pb.zip"
+            >&2 echo "Error: $tmpFolder/${path%"/."}.pb.zip not found! (This is probably a programming error)"
             rm -r "$tmpFolder"
             exit 1
         fi
