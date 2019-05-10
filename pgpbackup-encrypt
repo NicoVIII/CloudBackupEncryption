@@ -121,7 +121,6 @@ function handleDir {
     if [ $depth -eq 0 ]; then
         path="$path/."
         path=${path#"$inFolder/"}
-        echo "Path: $path"
         if [ "$path" = "." ]; then
             folderPath="."
             folderName="backup"
@@ -133,12 +132,15 @@ function handleDir {
         oldPath=$PWD
         cd "$inFolder/$path"
 
-        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
-        if [ "$_arg_all" = false ]; then
-            findCommand+="! -path \"*/.*\""
+        findCommand="find \".\""
+        if [ "$_arg_all" = "off" ]; then
+            findCommand+=" ! -path \"*/.*\""
         fi
+        findCommand+=" ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" -type f"
 
-        mkdir "$oldPath/$tmpFolder/$folderPath"
+        if [ ! -d "$oldPath/$tmpFolder/$folderPath" ]; then
+            mkdir "$oldPath/$tmpFolder/$folderPath"
+        fi
         eval $findCommand | while read i
         do
             command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"${i#"$inFolder/"}\""
