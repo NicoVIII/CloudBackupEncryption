@@ -11,6 +11,10 @@ cp pgpbackup-decrypt tmp/pgpbackup-decrypt
 cp pgpbackup-encrypt tmp/pgpbackup-encrypt
 
 sed -i "s/__VERSION__/$version/g" tmp/pgpbackup-*
+sed -i "/#__FUNCTIONS__/ {
+    r helper-functions.sh
+    d
+}" tmp/pgpbackup-*
 
 echo "Run argbash to build parameter support."
 ./argbash/bin/argbash tmp/pgpbackup-decrypt -o tmp/pgpbackup-decrypt

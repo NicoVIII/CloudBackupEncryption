@@ -41,40 +41,12 @@ fi
 readonly tmpFolder="$rootFolder/$tmp"
 
 # Functions
-function printHelper {
-    local message=$1
-    local verbose=$2
-
-    if [ "$_arg_quiet" == "off" ]; then
-        if [ $verbose == "off" ] || [ "$_arg_verbose" == "on" ]; then
-            echo "$message"
-        fi
-    fi
-}
-
-function printLog {
-    local message=$1
-
-    printHelper "$message" "off"
-}
-
-function printVerbose {
-    local message=$1
-
-    printHelper "$message" "on"
-}
+#__FUNCTIONS__
 
 function hashName {
     local fileName=$1
 
     echo "${_arg_emails[0]}-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
-}
-
-function execute {
-    local command=$1
-
-    printVerbose "> $command"
-    eval "$command"
 }
 
 function encryptFile {
@@ -230,12 +202,6 @@ function createOverviewFile {
         printf "%s (%s)\n" $(basename "$i") $(hashName $(basename "$i")) >> "$overviewFile"
         createOverviewFile "$i" $[$depth + 1] "$overviewFile"
     done
-}
-
-function dependencyMissing {
-    local command=$1
-
-    ! command -v "$command" >/dev/null 2>&1 && echo >&2 "$command command not found!"
 }
 
 # Start of program
