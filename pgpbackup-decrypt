@@ -60,6 +60,12 @@ function printVerbose {
     printHelper "$message" "on"
 }
 
+function dependencyMissing {
+    local command=$1
+
+    ! command -v "$command" >/dev/null 2>&1 && echo >&2 "$command command not found!"
+}
+
 function execute {
     local command=$1
 
@@ -101,11 +107,30 @@ function decrypt {
 # Start of program
 printLog "$progname $version - $libname"
 
+# Check dependencies
+valid="on"
+if dependencyMissing "find"; then valid="off"; fi
+if dependencyMissing "cut"; then valid="off"; fi
+if dependencyMissing "awk"; then valid="off"; fi
+if dependencyMissing "gpg"; then valid="off"; fi
+if dependencyMissing "dirname"; then valid="off"; fi
+if dependencyMissing "basename"; then valid="off"; fi
+if dependencyMissing "rm"; then valid="off"; fi
+if dependencyMissing "mv"; then valid="off"; fi
+if dependencyMissing "cd"; then valid="off"; fi
+if dependencyMissing "unzip"; then valid="off"; fi
+
+if [ "$valid" = "off" ]; then
+    printLog "Some dependencies are missing!"
+    printLog "Aborted."
+    exit 2
+fi
+
 # Check if decrypted folder exists
 if [ -d "$outFolder" ]; then
     printLog "The decrypt folder is already existing."
     printLog "Aborted."
-    exit 1
+    exit 3
 fi
 
 # Create out structure

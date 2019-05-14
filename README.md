@@ -126,6 +126,14 @@ The encrypted filestructure looks like this:
        |  folder2.zip.gpg
        |  folder3.zip.gpg
 
+### Exit codes
+
+0: Everything went well
+1: Unspecific/Unidentified error
+2: Dependencies missing
+3: Target folder is already existing
+4: 
+
 ## Development
 
 [![pipeline status](https://gitlab.com/NicoVIII/PGP-Backup/badges/master/pipeline.svg)](https://gitlab.com/NicoVIII/PGP-Backup/commits/master)
