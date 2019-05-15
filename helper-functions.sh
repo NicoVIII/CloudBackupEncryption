@@ -66,16 +66,22 @@ function printProgress {
 
         message+="] - $ratio%"
 
-        echo -n "$message"
-        echo -en "\r"
+        if [[ $ratio -ge 100 ]]; then
+            echo "$message"
+        else
+            echo -n "$message"
+            echo -en "\r"
+        fi
     fi
 }
 
 function addToProgress {
     local addBytes=$1
 
-    encryptedBytes=$(cat "$encryptedBytesPipe")
-    encryptedBytes=$[encryptedBytes + addBytes]
-    echo "$encryptedBytes" > $encryptedBytesPipe
-    printProgress
+    if [ "$_arg_quiet" = "off" ]; then
+        encryptedBytes=$(cat "$encryptedBytesPipe")
+        encryptedBytes=$[encryptedBytes + addBytes]
+        echo "$encryptedBytes" > $encryptedBytesPipe
+        printProgress
+    fi
 }
