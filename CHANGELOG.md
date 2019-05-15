@@ -13,6 +13,8 @@
 ### Features
 
 -   add `-q | --quiet` flag to both libraries to suppress all output
+-   add `-o | --output` parameter to specify output directory
+-   add progressbar
 -   new positional parameter is used for input directory
 
 ### Fixes
