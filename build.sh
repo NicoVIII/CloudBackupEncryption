@@ -11,6 +11,10 @@ cp pgpbackup-decrypt tmp/pgpbackup-decrypt
 cp pgpbackup-encrypt tmp/pgpbackup-encrypt
 
 sed -i "s/__VERSION__/$version/g" tmp/pgpbackup-*
+sed -i "/#__INIT__/ {
+    r init-code.sh
+    d
+}" tmp/pgpbackup-*
 sed -i "/#__FUNCTIONS__/ {
     r helper-functions.sh
     d

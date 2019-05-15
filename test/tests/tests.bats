@@ -59,11 +59,13 @@ function checkDecrypted {
     run ."/pgpbackup-encrypt" -q -r "$email"
     if [ ! "$status" -eq 0 ]; then echo "$output"; fi
     [ "$status" -eq 0 ]
+    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 
     run "./pgpbackup-decrypt" -qu -- "../backup"
     if [ ! "$status" -eq 0 ]; then echo "$output"; fi
     [ "$status" -eq 0 ]
+    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 }
 
@@ -71,11 +73,13 @@ function checkDecrypted {
     run "./pgpbackup-encrypt" -qV -r "$email"
     if [ ! "$status" -eq 0 ]; then echo "$output"; fi
     [ "$status" -eq 0 ]
+    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 
     run "./pgpbackup-decrypt" -quV -- "../backup"
     if [ ! "$status" -eq 0 ]; then echo "$output"; fi
     [ "$status" -eq 0 ]
+    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 }
 

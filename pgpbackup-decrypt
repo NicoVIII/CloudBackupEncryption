@@ -18,23 +18,7 @@ version="__VERSION__"
 
 # [ <-- needed because of Argbash
 
-readonly inFolder="${_arg_input#"/"}"
-readonly outFolder="${_arg_output#"/"}"
-
-# Determine which tmp folder to use
-readonly rootFolder=$(dirname $outFolder)
-if [ -d "$rootFolder/tmp" ]; then
-    for i in {1..9}
-    do
-        if [ ! -d "$rootFolder/tmp$i" ]; then
-            tmp="tmp$i"
-            break
-        fi
-    done
-else
-    tmp="tmp"
-fi
-readonly tmpFolder="$rootFolder/$tmp"
+#__INIT__
 
 # Functions
 #__FUNCTIONS__
@@ -101,7 +85,6 @@ fi
 
 # Create out structure
 mkdir -p "$outFolder"
-mkdir "$tmpFolder"
 
 find "$inFolder" -depth ! -path . -type d | while read i
 do

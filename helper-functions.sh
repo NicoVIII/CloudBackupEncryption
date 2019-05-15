@@ -10,7 +10,8 @@ function printHelper {
             if [ $error == "on" ]; then
                 echo >&2 "$message"
             else
-                echo "$message                    "
+                # Allow complete overwriting of progress bar
+                printf "%-34s\n" "$message"
             fi
         fi
     fi
