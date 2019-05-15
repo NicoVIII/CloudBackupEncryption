@@ -39,6 +39,33 @@ else
     tmp="tmp"
 fi
 readonly tmpFolder="$rootFolder/$tmp"
+mkdir "$tmpFolder"
+
+# Calculate size of files to encrypt
+if [ "$_arg_quiet" = "off" ]; then
+    readonly sizePipe="$tmpFolder/size"
+    echo 0 > "$sizePipe"
+
+    findCommand="find \"$inFolder\""
+    if [ "$_arg_all" = "off" ]; then
+        findCommand+=" ! -path \"*/.*\""
+    fi
+    findCommand+=" ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" -type f"
+
+    eval $findCommand | while read i
+    do
+        size=$(cat "$sizePipe")
+        filesize=$(stat --printf="%s" "$i")
+        size=$[size + filesize]
+        echo "$size" > "$sizePipe"
+    done
+
+    readonly size=$(cat "$sizePipe")
+fi
+
+# Create named pipe for file size counter
+readonly encryptedBytesPipe="$tmpFolder/encryptedBytes"
+echo 0 > "$encryptedBytesPipe"
 
 # Functions
 #__FUNCTIONS__
@@ -54,6 +81,7 @@ function encryptFile {
     local path=$2
 
     local command="gpg --batch --no-tty -q --output \"$path.gpg\" --encrypt"
+    local i
     for i in ${_arg_recipient[@]}; do
         command+=" --recipient \"$i\""
     done
@@ -70,10 +98,16 @@ function checkFiles {
     fi
     findCommand+=" -type f"
 
+    local i
     eval $findCommand | while read i
     do
-        if [ ! -f "$outFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
-            encryptFile "$i" "$outFolder/${i#"$inFolder"}"
+        if [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+            if [ ! -f "$outFolder/$i.gpg" ]; then
+                encryptFile "$i" "$outFolder/${i#"$inFolder"}"
+            fi
+
+            local filesize=$(stat --printf="%s" "$i")
+            addToProgress $[filesize]
         fi
     done
 }
@@ -85,7 +119,6 @@ function handleDir {
     # Create necessary folders
     if [ "$path" = "$inFolder" ]; then
         mkdir -p "$outFolder"
-        mkdir "$tmpFolder"
         cp "$inFolder/decrypt.sh" "$outFolder/decrypt.sh" 2> /dev/null
         cp "$inFolder/pgpbackup-decrypt" "$outFolder/pgpbackup-decrypt" 2> /dev/null
     fi
@@ -113,10 +146,14 @@ function handleDir {
         if [ ! -d "$oldPath/$tmpFolder/$folderPath" ]; then
             mkdir "$oldPath/$tmpFolder/$folderPath"
         fi
+        local zippedBytes=0
         eval $findCommand | while read i
         do
             command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"${i#"$inFolder/"}\""
             execute "$command"
+
+            local filesize=$(stat --printf="%s" "${i#"$inFolder/"}")
+            zippedBytes=$[zippedBytes + filesize]
         done
         cd "$oldPath"
 
@@ -125,6 +162,8 @@ function handleDir {
         fi
         if [ -f "$tmpFolder/${path%"/."}.pb.zip" ]; then
             encryptFile "$tmpFolder/${path%"/."}.pb.zip" "$outFolder/${path%"/."}.zip"
+
+            addToProgress $zippedBytes
         else
             >&2 echo "Error: $tmpFolder/${path%"/."}.pb.zip not found! (This is probably a programming error)"
             rm -r "$tmpFolder"
@@ -146,6 +185,7 @@ function handleDir {
         fi
         findCommand+=" -type d"
 
+        local i
         eval $findCommand | while read i
         do
             if [ $depth -gt 0 ]; then
@@ -184,6 +224,7 @@ function createOverviewFile {
     fi
 
     # Add files to overview file
+    local i
     eval "$findCommand -type f" | while read i
     do
         addSpacingToOverviewFile $depth 1 >> "$overviewFile"
@@ -196,6 +237,7 @@ function createOverviewFile {
     done
 
     # Add directories to overview file
+    local i
     eval "$findCommand -type d" | while read i
     do
         addSpacingToOverviewFile $depth 0 >> "$overviewFile"
@@ -245,6 +287,7 @@ if [ "$_arg_name_hashing" = "on" ]; then
     createOverviewFile "$outFolder" 0 "$overviewFile"
 
     # Hash file names
+    local i
     find "$outFolder" -depth -iname "*.gpg" -type f | while read i
     do
         # Hash filename
@@ -252,6 +295,7 @@ if [ "$_arg_name_hashing" = "on" ]; then
     done
 
     # Hash folder names
+    local j
     find "$outFolder" -mindepth 1 -depth -type d | while read j
     do
         path="$(dirname "$j")"

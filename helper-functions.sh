@@ -1,3 +1,4 @@
+#!/bin/bash
 # Printing functions
 function printHelper {
     local message=$1
@@ -9,7 +10,7 @@ function printHelper {
             if [ $error == "on" ]; then
                 echo >&2 "$message"
             else
-                echo "$message"
+                echo "$message                    "
             fi
         fi
     fi
@@ -44,4 +45,37 @@ function execute {
 
     printVerbose "> $command"
     eval "$command"
+}
+
+function printProgress {
+    if [ "$_arg_quiet" = "off" ]; then
+        encryptedBytes=$(cat "$encryptedBytesPipe")
+
+        local ratio=$[encryptedBytes * 100 / size]
+
+        local message="["
+
+        for i in {1..25}
+        do
+            if [[ $[i * 4] -le $ratio ]]; then
+                message+="#"
+            else
+                message+=" "
+            fi
+        done
+
+        message+="] - $ratio%"
+
+        echo -n "$message"
+        echo -en "\r"
+    fi
+}
+
+function addToProgress {
+    local addBytes=$1
+
+    encryptedBytes=$(cat "$encryptedBytesPipe")
+    encryptedBytes=$[encryptedBytes + addBytes]
+    echo "$encryptedBytes" > $encryptedBytesPipe
+    printProgress
 }

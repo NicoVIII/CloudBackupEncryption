@@ -15,6 +15,7 @@ sed -i "/#__FUNCTIONS__/ {
     r helper-functions.sh
     d
 }" tmp/pgpbackup-*
+sed -i "s_#!/bin/bash__g" tmp/pgpbackup-*
 
 echo "Run argbash to build parameter support."
 ./argbash/bin/argbash tmp/pgpbackup-decrypt -o tmp/pgpbackup-decrypt
