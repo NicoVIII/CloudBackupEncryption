@@ -4,7 +4,7 @@
 [![GitHub Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup.svg)](https://github.com/NicoVIII/PGP-Backup/releases/latest)
 [![Github Pre-Release](https://img.shields.io/github/release/NicoVIII/PGP-Backup/all.svg?label=prerelease)](https://github.com/NicoVIII/PGP-Backup/releases)
 [![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/NicoVIII/CloudBackupEncryption/master/LICENSE.txt)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e3e62b15d1b34e598da5aeaf3cd20817?branch=production)](https://www.codacy.com/app/NicoVIII/PGP-Backup?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=NicoVIII/PGP-Backup&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e3e62b15d1b34e598da5aeaf3cd20817?branch=production)](https://www.codacy.com/app/NicoVIII/PGP-Backup?utm_source=github.com&utm_medium=referral&utm_content=NicoVIII/PGP-Backup&utm_campaign=Badge_Grade)
 
 This project intends to provide tools for users to easily encrypt a filestructure with PGP. It should be possible to store backups in a cloud without giving the cloud provider too much information about stored data.
 Because this project consists out of batch scripts, it will only work on Linux systems. It may work on macOS, but that is not tested.
@@ -19,15 +19,15 @@ The commands zip and unzip are called as well, so these must be accessible too. 
 ### Encryption
 
 1.  Put both `.sh` and `pgpbackup-encrypt` and `pgpbackup-decrypt` files into the folder which contents you want to encrypt.
-2.  Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key. If you want to encrypt the backup for multiple keys, just add the other email addresses after the first one.
+2.  Open `encrypt.sh` and replace `<email_to_encrypt_for>` with the email, which is part of your pgp key. If you want to encrypt the backup for multiple keys, just add the other email addresses with additional `-r` after the first one. e.g. `-r nico@nicoviii.net -r nico2@nicoviii.net`
 3.  Configure encryption in `encrypt.sh`. Look up the options at [Options / encrypt](#encrypt)
-4.  You should configure decryption in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup, to decrypt the backup later. Look up the options at [Options / decrypt](#decrypt)
-5.  Execute `encrypt.sh`. It will start the encryption. The backup will be placed inside a `backup` folder next to the folder with the files.
+4.  You should configure decryption in `decrypt.sh` right now, if you want to configure it for every backup. The files will be copied into the backup to decrypt it later. Look up the options at [Options / decrypt](#decrypt)
+5.  Execute `encrypt.sh`. It will start the encryption. The backup will be placed by default inside a `backup` folder next to the folder with the files.
 
 ### Decryption
 
 1.  The files `decrypt.sh` and `pgpbackup-decrypt` should not be encrypted. If both are available you should be able to decrypt the backup.
-2.  Execute `decrypt.sh`.
+2.  Execute `decrypt.sh`. It will start the decryption. The decrypted files will be placed by default inside a `decrypted` folder next to the folder with the backup.
 
 ## Options
 
@@ -38,14 +38,18 @@ These are the options and flags you can use with the files and insert into `encr
 `-a | --(no-)all` : include hidden files  
 `-d | --depth <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
 `-h | --help` : Prints help  
-`-n | --(no-)name-hashing` : hash filenames (enabled by default)  
-`--(no-)hash-names` : hash filenames (deprecated, use --name-hashing instead)  
+`-n | --(no-)name-hashing` : hash filenames  
+`-o | --output <path>` : defines output folder  
+`-q | --(no-)quiet` : supresses all output and skips progress calculation  
+`-r | --recipient <email>` : defines which key(s) should be used for encryption  
 `-v | --version` : Prints version  
 `-V | --(no-)verbose` : Prints more information about what the script is doing
 
 ### decrypt
 
 `-h | --help` : Prints help  
+`-o | --output <path>` : defines output folder  
+`-q | --(no-)quiet`: supresses all output and skips progress calculation  
 `-u | --(no-)unpack` : unpacks all decrypted archives  
 `-v | --version` : Prints version  
 `-V | --(no-)verbose` : Prints more information about what the script is doing
@@ -137,4 +141,4 @@ The encrypted filestructure looks like this:
 ## Development
 
 [![pipeline status](https://gitlab.com/NicoVIII/PGP-Backup/badges/master/pipeline.svg)](https://gitlab.com/NicoVIII/PGP-Backup/commits/master)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e3e62b15d1b34e598da5aeaf3cd20817)](https://www.codacy.com/app/NicoVIII/PGP-Backup?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=NicoVIII/PGP-Backup&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e3e62b15d1b34e598da5aeaf3cd20817)](https://www.codacy.com/app/NicoVIII/PGP-Backup?utm_source=github.com&utm_medium=referral&utm_content=NicoVIII/PGP-Backup&utm_campaign=Badge_Grade)
