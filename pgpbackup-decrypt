@@ -95,8 +95,6 @@ do
             folderName="."
         fi
 
-        echo "unzip stuff: $outFolder/$folderName"
-
         command="unzip -q \"$origFile\" -d \"$outFolder/$folderName\""
         execute "$command"
         rm "$origFile"
