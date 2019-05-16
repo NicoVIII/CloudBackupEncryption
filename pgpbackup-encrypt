@@ -158,8 +158,8 @@ function handleDir {
         fi
     else
         if [ "$first" = "off" ]; then
-            mkdir "$outFolder/"${path#"$inFolder"}
-            mkdir "$tmpFolder/"${path#"$inFolder"}
+            mkdir "$outFolder/${path#"$inFolder"}"
+            mkdir "$tmpFolder/${path#"$inFolder"}"
         fi
 
         # Handle files in directory

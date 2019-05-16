@@ -32,7 +32,7 @@ function checkDecrypted {
     [ -f "../decrypted/file1.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     if [ "$withHidden" = "on" ]; then
         [ -f "../decrypted/.hidden.file" ]
         [ -f "../decrypted/folder1/.hidden2.file" ]
@@ -51,7 +51,7 @@ function checkDecrypted {
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
     if [ "$withHidden" = "on" ]; then
         [ "$(< ../decrypted/.hidden.file)" = "hidden-file-content" ]
         [ "$(< ../decrypted/folder1/.hidden2.file)" = "hidden-file-two-content" ]
@@ -109,13 +109,13 @@ function checkDecrypted {
     [ -f "../backup/file1.file.gpg" ]
     [ -f "../backup/folder1/file2.file.gpg" ]
     [ -f "../backup/folder1/folder2/file3.file.gpg" ]
-    [ -f "../backup/folder1/folder3/file4.file.gpg" ]
+    [ -f "../backup/folder1/folder with spaces/file4.file.gpg" ]
 
     # Check content of encrypted files
     [ "$(< ../backup/file1.file.gpg 2>/dev/null)" != "file-one-content" ]
     [ "$(< ../backup/folder1/file2.file.gpg 2>/dev/null)" != "file-two-content" ]
     [ "$(< ../backup/folder1/folder2/file3.file.gpg 2>/dev/null)" != "file-three-content" ]
-    [ "$(< ../backup/folder1/folder3/file4.file.gpg 2>/dev/null)" != "file-four-content" ]
+    [ "$(< "../backup/folder1/folder with spaces/file4.file.gpg" 2>/dev/null)" != "file-four-content" ]
 
     run "./pgpbackup-decrypt" -Vu -- "../backup"
 
@@ -129,9 +129,10 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ ! -f "../decrypted/.hidden.file" ]
     [ ! -f "../decrypted/folder1/.hidden2.file" ]
     [ ! -d "../decrypted/.hidden-folder" ]
@@ -139,10 +140,11 @@ function checkDecrypted {
     [ ! -f "../decrypted/.hidden-folder/.hidden3.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with namehashing" {
@@ -176,16 +178,18 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/overview.txt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ ! -f "../decrypted/foldernames.txt" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with depth 0" {
@@ -214,9 +218,10 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ ! -f "../decrypted/.hidden.file" ]
     [ ! -f "../decrypted/folder1/.hidden2.file" ]
     [ ! -d "../decrypted/.hidden-folder" ]
@@ -224,10 +229,11 @@ function checkDecrypted {
     [ ! -f "../decrypted/.hidden-folder/.hidden3.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with depth 1" {
@@ -259,9 +265,10 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ ! -f "../decrypted/.hidden.file" ]
     [ ! -f "../decrypted/folder1/.hidden2.file" ]
     [ ! -d "../decrypted/.hidden-folder" ]
@@ -269,10 +276,11 @@ function checkDecrypted {
     [ ! -f "../decrypted/.hidden-folder/.hidden3.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with depth 2" {
@@ -292,7 +300,7 @@ function checkDecrypted {
     [ -f "../backup/file1.file.gpg" ]
     [ -f "../backup/folder1/file2.file.gpg" ]
     [ -f "../backup/folder1/folder2.zip.gpg" ]
-    [ -f "../backup/folder1/folder3.zip.gpg" ]
+    [ -f "../backup/folder1/folder with spaces.zip.gpg" ]
 
     run "./pgpbackup-decrypt" -Vu -- "../backup"
 
@@ -306,9 +314,10 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ ! -f "../decrypted/.hidden.file" ]
     [ ! -f "../decrypted/folder1/.hidden2.file" ]
     [ ! -d "../decrypted/.hidden-folder" ]
@@ -316,10 +325,11 @@ function checkDecrypted {
     [ ! -f "../decrypted/.hidden-folder/.hidden3.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with depth 1 and namehashing" {
@@ -348,15 +358,17 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with depth 2 and namehashing" {
@@ -386,15 +398,17 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
 }
 
 @test "Invoke with all" {
@@ -414,7 +428,7 @@ function checkDecrypted {
     [ -f "../backup/file1.file.gpg" ]
     [ -f "../backup/folder1/file2.file.gpg" ]
     [ -f "../backup/folder1/folder2/file3.file.gpg" ]
-    [ -f "../backup/folder1/folder3/file4.file.gpg" ]
+    [ -f "../backup/folder1/folder with spaces/file4.file.gpg" ]
 
     run "./pgpbackup-decrypt" -Vu -- "../backup"
 
@@ -428,9 +442,10 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ -f "../decrypted/.hidden.file" ]
     [ -f "../decrypted/folder1/.hidden2.file" ]
     [ -d "../decrypted/.hidden-folder" ]
@@ -438,10 +453,11 @@ function checkDecrypted {
     [ -f "../decrypted/.hidden-folder/.hidden3.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
     [ "$(< ../decrypted/.hidden.file)" = "hidden-file-content" ]
     [ "$(< ../decrypted/folder1/.hidden2.file)" = "hidden-file-two-content" ]
     [ "$(< ../decrypted/.hidden-folder/file5.file)" = "file-five-content" ]
@@ -471,9 +487,10 @@ function checkDecrypted {
     [ -f "../decrypted/pgpbackup-decrypt" ]
     [ -f "../decrypted/pgpbackup-encrypt" ]
     [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
     [ -f "../decrypted/folder1/file2.file" ]
     [ -f "../decrypted/folder1/folder2/file3.file" ]
-    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
     [ -f "../decrypted/.hidden.file" ]
     [ -f "../decrypted/folder1/.hidden2.file" ]
     [ -d "../decrypted/.hidden-folder" ]
@@ -481,10 +498,11 @@ function checkDecrypted {
     [ -f "../decrypted/.hidden-folder/.hidden3.file" ]
 
     # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
     [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
     [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
     [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
-    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
     [ "$(< ../decrypted/.hidden.file)" = "hidden-file-content" ]
     [ "$(< ../decrypted/folder1/.hidden2.file)" = "hidden-file-two-content" ]
     [ "$(< ../decrypted/.hidden-folder/file5.file)" = "file-five-content" ]
