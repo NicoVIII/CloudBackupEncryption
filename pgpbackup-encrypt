@@ -258,7 +258,11 @@ fi
 
 handleDir $depth $email $inFolder
 
+printLogN "Finished encrypting!"
+
 if [ "$_arg_name_hashing" = "on" ]; then
+    printLogR "Hash file and folder names..."
+
     # Create overview file
     overviewFile="$outFolder/overview.txt"
     createOverviewFile "$outFolder" 0 "$overviewFile"
@@ -291,11 +295,12 @@ if [ "$_arg_name_hashing" = "on" ]; then
     # Encrypt overview file
     encryptFile "$overviewFile" "$overviewFile"
     rm "$overviewFile"
+
+    printLogN "Finished hashing!            "
 fi
 
 # Tidy up
 rm -r "$tmpFolder"
 
-printLogN "Finished encrypting!"
 exit 0
 # ] <-- needed because of Argbash
