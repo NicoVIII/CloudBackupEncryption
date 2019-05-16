@@ -1,5 +1,5 @@
 #!/bin/bash
-version="v1.0.0-alpha.1"
+version="v1.0.0-alpha.2"
 
 type=$1
 
