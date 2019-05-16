@@ -20,6 +20,7 @@ sed -i "/#__FUNCTIONS__/ {
     d
 }" tmp/pgpbackup-*
 sed -i "s_#!/bin/bash__g" tmp/pgpbackup-*
+sed -i '1s;^;#!/bin/bash\n;' tmp/pgpbackup-*
 
 echo "Run argbash to build parameter support."
 ./argbash/bin/argbash tmp/pgpbackup-decrypt -o tmp/pgpbackup-decrypt

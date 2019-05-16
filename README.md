@@ -136,7 +136,7 @@ The encrypted filestructure looks like this:
 1: Unspecific/Unidentified error
 2: Dependencies missing
 3: Target folder is already existing
-4: 
+4: A path error happened. This is probably a programming error.
 
 ## Development
 
