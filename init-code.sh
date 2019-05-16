@@ -83,7 +83,7 @@ currSize=0
 printLogN "$progname $version - $libname"
 
 # Prepare tmp folder
-readonly rootFolder=$(dirname $outFolder)
+readonly rootFolder=$(dirname "$outFolder")
 if [ -d "$rootFolder/tmp" ]; then
     for i in {1..9}
     do
