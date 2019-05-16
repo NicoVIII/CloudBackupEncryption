@@ -27,8 +27,7 @@ depth=$_arg_depth
 
 # Calculate size of files to encrypt
 if [ "$_arg_quiet" = "off" ]; then
-    readonly sizePipe="$tmpFolder/size"
-    echo 0 > "$sizePipe"
+    printLogR "Precalculate file sizes for progressbar..."
 
     findCommand="find \"$inFolder\""
     if [ "$_arg_all" = "off" ]; then
@@ -36,15 +35,16 @@ if [ "$_arg_quiet" = "off" ]; then
     fi
     findCommand+=" ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" -type f"
 
-    eval $findCommand | while read i
+    sizeTmp=0
+    while read i
     do
-        size=$(cat "$sizePipe")
         filesize=$(stat --printf="%s" "$i")
-        size=$[size + filesize]
-        echo "$size" > "$sizePipe"
-    done
+        sizeTmp=$[sizeTmp + filesize]
+    done <<< $(eval $findCommand)
 
-    readonly size=$(cat "$sizePipe")
+    readonly size=$sizeTmp
+
+    printLogN "Finished precalculation.                  "
 fi
 
 # Functions
@@ -79,7 +79,7 @@ function checkFiles {
     findCommand+=" -type f"
 
     local i
-    eval $findCommand | while read i
+    while read i
     do
         if [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             if [ ! -f "$outFolder/$i.gpg" ]; then
@@ -89,7 +89,7 @@ function checkFiles {
             local filesize=$(stat --printf="%s" "$i")
             addToProgress $[filesize]
         fi
-    done
+    done <<< $(eval $findCommand)
 }
 
 function handleDir {
@@ -127,14 +127,14 @@ function handleDir {
             mkdir "$oldPath/$tmpFolder/$folderPath"
         fi
         local zippedBytes=0
-        eval $findCommand | while read i
+        while read i
         do
             command="zip -qur \"$oldPath/$tmpFolder/$folderPath/$folderName.pb.zip\" \"${i#"$inFolder/"}\""
             execute "$command"
 
             local filesize=$(stat --printf="%s" "${i#"$inFolder/"}")
             zippedBytes=$[zippedBytes + filesize]
-        done
+        done <<< $(eval $findCommand)
         cd "$oldPath"
 
         if [ "$path" == "." ]; then
@@ -226,9 +226,6 @@ function createOverviewFile {
     done
 }
 
-# Start of program
-printLog "$progname $version - $libname"
-
 # Check dependencies
 valid="on"
 if dependencyMissing "find"; then valid="off"; fi
@@ -242,8 +239,8 @@ if dependencyMissing "cd"; then valid="off"; fi
 if dependencyMissing "zip"; then valid="off"; fi
 
 if [ "$valid" = "off" ]; then
-    printLog "Some dependencies are missing!"
-    printLog "Aborted."
+    printLogN "Some dependencies are missing!"
+    printLogN "Aborted."
     exit 2
 fi
 
@@ -251,10 +248,10 @@ fi
 if [ -d "$outFolder" ]; then
     if [ -f "$outFolder/decrypt.sh" ]; then
         rm -r "$outFolder"
-        printLog "Removed existing backup folder."
+        printLogN "Removed existing backup folder."
     else
-        printLog "The backup folder is already existing."
-        printLog "Aborted."
+        printLogN "The backup folder is already existing."
+        printLogN "Aborted."
         exit 3
     fi
 fi
@@ -299,6 +296,6 @@ fi
 # Tidy up
 rm -r "$tmpFolder"
 
-printLog "Finished encrypting!"
+printLogN "Finished encrypting!"
 exit 0
 # ] <-- needed because of Argbash
