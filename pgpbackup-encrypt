@@ -133,7 +133,9 @@ function handleDir {
             execute "$command"
 
             local filesize=$(stat --printf="%s" "${i#"$inFolder/"}")
-            zippedBytes=$[zippedBytes + filesize]
+            local half=$[filesize / 2]
+            addToProgress $half
+            zippedBytes=$[zippedBytes + filesize - half]
         done <<< $(eval $findCommand)
         cd "$oldPath"
 
@@ -142,6 +144,7 @@ function handleDir {
         fi
         if [ -f "$tmpFolder/${path%"/."}.pb.zip" ]; then
             encryptFile "$tmpFolder/${path%"/."}.pb.zip" "$outFolder/${path%"/."}.zip"
+            rm "$tmpFolder/${path%"/."}.pb.zip"
 
             addToProgress $zippedBytes
         else
