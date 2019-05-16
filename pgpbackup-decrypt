@@ -76,7 +76,7 @@ mkdir -p "$outFolder"
 
 find "$inFolder" -depth ! -path . -type d | while read i
 do
-    mkdir -p "$outFolder/"${i#"$inFolder"}
+    mkdir -p "$outFolder${i#"$inFolder"}"
 done
 
 find "$inFolder" -type f -iname "*.gpg" | while read j
@@ -85,13 +85,18 @@ do
     origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
     origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
     origFile="$(dirname "$j")"
-    origFile="$outFolder/${origFile#$inFolder}/$origFileName"
+    origFile="$outFolder${origFile#"$inFolder"}/$origFileName"
     mv "$tmpFolder/tmpfile" "$origFile"
-    if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
+    if [ "$_arg_unpack" = "on" ] && [[ $origFileName = *.pb.zip ]]; then
         folderName=${origFile::-7}
+        folderName=${folderName#"$outFolder"}
+        folderName=${folderName#"/"}
         if [[ "$origFile" = *backup.pb.zip ]]; then
             folderName="."
         fi
+
+        echo "unzip stuff: $outFolder/$folderName"
+
         command="unzip -q \"$origFile\" -d \"$outFolder/$folderName\""
         execute "$command"
         rm "$origFile"

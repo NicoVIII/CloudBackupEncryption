@@ -15,6 +15,11 @@ teardown() {
     cd "../.."
 }
 
+function log_on_failure() {
+  echo Failed with status "$status" and output:
+  echo "$output"
+}
+
 # ! Can not be used for now, because error will not be specific enough
 function checkDecrypted {
     local withHidden=$1
@@ -57,34 +62,41 @@ function checkDecrypted {
 
 @test "Invoke with quiet" {
     run ."/pgpbackup-encrypt" -q -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
-    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 
     run "./pgpbackup-decrypt" -qu -- "../backup"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
-    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 }
 
 @test "Invoke with quiet and verbose" {
     run "./pgpbackup-encrypt" -qV -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
-    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 
     run "./pgpbackup-decrypt" -quV -- "../backup"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
-    if [ ! "$output" = "" ]; then echo "$output"; fi
     [ "$output" = "" ]
 }
 
 @test "Basic invoke" {
-    run "./pgpbackup-encrypt" -r "$email"
+    run "./pgpbackup-encrypt" -V -r "$email"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -105,7 +117,10 @@ function checkDecrypted {
     [ "$(< ../backup/folder1/folder2/file3.file.gpg 2>/dev/null)" != "file-three-content" ]
     [ "$(< ../backup/folder1/folder3/file4.file.gpg 2>/dev/null)" != "file-four-content" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files
@@ -131,7 +146,10 @@ function checkDecrypted {
 }
 
 @test "Invoke with namehashing" {
-    run "./pgpbackup-encrypt" -n -r "$email"
+    run "./pgpbackup-encrypt" -Vn -r "$email"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check for some key files
@@ -140,7 +158,10 @@ function checkDecrypted {
     [ -f "../backup/overview.txt.gpg" ]
     [ -f "../backup/foldernames.txt.gpg" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files
@@ -168,8 +189,10 @@ function checkDecrypted {
 }
 
 @test "Invoke with depth 0" {
-    run "./pgpbackup-encrypt" -d 0 -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+    run "./pgpbackup-encrypt" -V -d 0 -r "$email"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -179,7 +202,10 @@ function checkDecrypted {
     [ -f "../backup/pgpbackup-decrypt" ]
     [ -f "../backup/backup.zip.gpg" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files
@@ -206,7 +232,9 @@ function checkDecrypted {
 
 @test "Invoke with depth 1" {
     run "./pgpbackup-encrypt" -V -d 1 -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -219,7 +247,10 @@ function checkDecrypted {
     [ -f "../backup/file1.file.gpg" ]
     [ -f "../backup/folder1.zip.gpg" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files
@@ -246,7 +277,9 @@ function checkDecrypted {
 
 @test "Invoke with depth 2" {
     run "./pgpbackup-encrypt" -V -d 2 -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -261,7 +294,10 @@ function checkDecrypted {
     [ -f "../backup/folder1/folder2.zip.gpg" ]
     [ -f "../backup/folder1/folder3.zip.gpg" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files
@@ -287,8 +323,47 @@ function checkDecrypted {
 }
 
 @test "Invoke with depth 1 and namehashing" {
+    run "./pgpbackup-encrypt" -nV -d 1 -r "$email"
+
+    log_on_failure
+
+    [ "$status" -eq 0 ]
+
+    # Check for some key files
+    [ -f "../backup/decrypt.sh" ]
+    [ -f "../backup/pgpbackup-decrypt" ]
+    [ -f "../backup/overview.txt.gpg" ]
+
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
+    [ "$status" -eq 0 ]
+
+    # Check structure of decrypted files
+    [ ! -f "../decrypted/.hidden.file" ]
+    [ ! -f "../decrypted/folder1/.hidden2.file" ]
+    [ -f "../decrypted/decrypt.sh" ]
+    [ -f "../decrypted/encrypt.sh" ]
+    [ -f "../decrypted/pgpbackup-decrypt" ]
+    [ -f "../decrypted/pgpbackup-encrypt" ]
+    [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/folder1/file2.file" ]
+    [ -f "../decrypted/folder1/folder2/file3.file" ]
+    [ -f "../decrypted/folder1/folder3/file4.file" ]
+
+    # Check content of decrypted files
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+}
+
+@test "Invoke with depth 2 and namehashing" {
     run "./pgpbackup-encrypt" -nV -d 2 -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check for some key files
@@ -297,7 +372,10 @@ function checkDecrypted {
     [ -f "../backup/overview.txt.gpg" ]
     [ -f "../backup/foldernames.txt.gpg" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files
@@ -321,7 +399,9 @@ function checkDecrypted {
 
 @test "Invoke with all" {
     run "./pgpbackup-encrypt" -aV -r "$email"
-    if [ ! "$status" -eq 0 ]; then echo "$output"; fi
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of encrypted files
@@ -336,7 +416,53 @@ function checkDecrypted {
     [ -f "../backup/folder1/folder2/file3.file.gpg" ]
     [ -f "../backup/folder1/folder3/file4.file.gpg" ]
 
-    run "./pgpbackup-decrypt" -u -- "../backup"
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
+    [ "$status" -eq 0 ]
+
+    # Check structure of decrypted files
+    [ -f "../decrypted/decrypt.sh" ]
+    [ -f "../decrypted/encrypt.sh" ]
+    [ -f "../decrypted/pgpbackup-decrypt" ]
+    [ -f "../decrypted/pgpbackup-encrypt" ]
+    [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/folder1/file2.file" ]
+    [ -f "../decrypted/folder1/folder2/file3.file" ]
+    [ -f "../decrypted/folder1/folder3/file4.file" ]
+    [ -f "../decrypted/.hidden.file" ]
+    [ -f "../decrypted/folder1/.hidden2.file" ]
+    [ -d "../decrypted/.hidden-folder" ]
+    [ -f "../decrypted/.hidden-folder/file5.file" ]
+    [ -f "../decrypted/.hidden-folder/.hidden3.file" ]
+
+    # Check content of decrypted files
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< ../decrypted/folder1/folder3/file4.file)" = "file-four-content" ]
+    [ "$(< ../decrypted/.hidden.file)" = "hidden-file-content" ]
+    [ "$(< ../decrypted/folder1/.hidden2.file)" = "hidden-file-two-content" ]
+    [ "$(< ../decrypted/.hidden-folder/file5.file)" = "file-five-content" ]
+    [ "$(< ../decrypted/.hidden-folder/.hidden3.file)" = "hidden-file-three-content" ]
+}
+
+@test "Invoke with all and depth 1 and name hashing" {
+    run "./pgpbackup-encrypt" -anV -d 1 -r "$email"
+
+    log_on_failure
+
+    [ "$status" -eq 0 ]
+
+    # Check structure of encrypted files
+    [ -f "../backup/decrypt.sh" ]
+    [ -f "../backup/pgpbackup-decrypt" ]
+
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
     [ "$status" -eq 0 ]
 
     # Check structure of decrypted files

@@ -1,8 +1,4 @@
 #!/bin/bash
-readonly inFolder="${_arg_input#"/"}"
-readonly outFolder="${_arg_output#"/"}"
-currSize=0
-
 # Printing functions
 function printHelper {
     local message=$1
@@ -10,9 +6,9 @@ function printHelper {
     local error=$3
     local ending=$4
 
-    if [ "$_arg_quiet" == "off" ]; then
-        if [ $verbose == "off" ] || [ "$_arg_verbose" == "on" ]; then
-            if [ $error == "on" ]; then
+    if [ "$_arg_quiet" = "off" ]; then
+        if [ "$verbose" = "off" ] || [ "$_arg_verbose" = "on" ]; then
+            if [ "$error" = "on" ]; then
                 echo >&2 -en "$message$ending"
             else
                 # Allow complete overwriting of progress bar
@@ -67,6 +63,22 @@ function printErrorN {
     printError "$message" "\n"
 }
 
+function validifyLink {
+    local path=$1
+
+    readlink -f "$path" || (printErrorN "$path could not be validified!" && exit 4)
+}
+
+function validifyVirtualLink {
+    local path=$1
+
+    readlink -m "$path"
+}
+
+readonly inFolder=$(validifyLink "$_arg_input")
+readonly outFolder=$(validifyLink "$_arg_output")
+currSize=0
+
 # Start of program
 printLogN "$progname $version - $libname"
 
@@ -83,5 +95,5 @@ if [ -d "$rootFolder/tmp" ]; then
 else
     tmp="tmp"
 fi
-readonly tmpFolder="$rootFolder/$tmp"
+readonly tmpFolder=$(validifyLink "$rootFolder/$tmp")
 mkdir "$tmpFolder"
