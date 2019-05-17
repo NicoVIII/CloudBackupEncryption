@@ -9,11 +9,14 @@
 -   email for encrypt is now repeatable optional parameter `-r|--recipient` instead of position parameter
 -   remove deprecated `--hash-names`
 -   change default of `--name-hashing` to `"off"`
+-   uses tar and xz instead of zip now
 
 ### Features
 
 -   add `-q | --quiet` flag to both libraries to suppress all output
 -   add `-o | --output` parameter to specify output directory
+-   add `-z | --zip` flag to use zip instead of tar and compression
+-   add `-c | --compression` parameter to determine which compression method and flags will be used
 -   add progressbar
 -   new positional parameter is used for input directory
 

@@ -8,12 +8,14 @@ version="__VERSION__"
 
 # ARG_POSITIONAL_DOUBLEDASH()
 # ARG_POSITIONAL_SINGLE([input], [Folder to encrypt], ["."])
+# ARG_OPTIONAL_SINGLE([compression], [c], [Used compression priority: veryfast, fast, default, small, verysmall], ["default"])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
 # ARG_OPTIONAL_SINGLE([output], [o], [Folder to store encrypted files], ["../backup"])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
 # ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names])
 # ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
+# ARG_OPTIONAL_BOOLEAN([zip],[z],[Ignores compression and uses zip instead of tar])
 # ARG_OPTIONAL_REPEATED([recipient], [r], [recipients to encrypt for, is passed through to gpg encrypt command])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
@@ -24,6 +26,36 @@ version="__VERSION__"
 depth=$_arg_depth
 
 #__INIT__
+
+# Determinate compression method
+compressionCmd=""
+if [ "$_arg_zip" = "on" ]; then
+    bundleCmd="zip -qur \"%s\" \"%s\""
+    containerExtension="zip"
+    archiveExtension="zip"
+else
+    bundleCmd="tar -rf \"%s\" \"%s\""
+    containerExtension="tar"
+    if [ "$_arg_compression" = "default" ]; then
+        compressionCmd="xz -2 \"%s\""
+        archiveExtension="$containerExtension.xz"
+    elif [ "$_arg_compression" = "small" ]; then
+        compressionCmd="xz -6 \"%s\""
+        archiveExtension="$containerExtension.xz"
+    elif [ "$_arg_compression" = "fast" ]; then
+        compressionCmd="gzip -6 \"%s\""
+        archiveExtension="$containerExtension.gz"
+    elif [ "$_arg_compression" = "verysmall" ]; then
+        compressionCmd="xz -9 \"%s\""
+        archiveExtension="$containerExtension.xz"
+    elif [ "$_arg_compression" = "veryfast" ]; then
+        compressionCmd="gzip -1 \"%s\""
+        archiveExtension="$containerExtension.gz"
+    else
+        printLogN "Invalid compression priority given! Have a look at help to get valid values."
+        exit 5
+    fi
+fi
 
 # Calculate size of files to encrypt
 if [ "$_arg_quiet" = "off" ]; then
@@ -128,10 +160,11 @@ function handleDir {
         if [ ! -d "$folderPathInTmp" ]; then
             mkdir "$folderPathInTmp"
         fi
+        target="$folderPathInTmp/$folderName.pb.$containerExtension"
         local zippedBytes=0
         while read i
         do
-            command="zip -qur \"$folderPathInTmp/$folderName.pb.zip\" \"${i#"$inFolder/"}\""
+            command="$(printf "$bundleCmd" "$target" "${i#"$inFolder/"}")"
             execute "$command"
 
             local filesize=$(stat --printf="%s" "${i#"$inFolder/"}")
@@ -139,6 +172,11 @@ function handleDir {
             addToProgress $half
             zippedBytes=$[zippedBytes + filesize - half]
         done <<< $(eval "$findCommand")
+
+        if [ ! "$compressionCmd" = "" ]; then
+            execute "$(printf "$compressionCmd" "$target")"
+        fi
+
         cd "$oldPath"
 
         if [ $first = "on" ]; then
@@ -146,13 +184,13 @@ function handleDir {
         fi
 
         tmpFilePath=$(validifyLink "$tmpFolder/${path#"$inFolder/"}")
-        if [ -f "$tmpFilePath.pb.zip" ]; then
-            encryptFile "$tmpFilePath.pb.zip" "$outFolder/${path#"$inFolder/"}.zip"
-            rm "$tmpFilePath.pb.zip"
+        if [ -f "$tmpFilePath.pb.$archiveExtension" ]; then
+            encryptFile "$tmpFilePath.pb.$archiveExtension" "$outFolder/${path#"$inFolder/"}.$archiveExtension"
+            rm "$tmpFilePath.pb.$archiveExtension"
 
             addToProgress $zippedBytes
         else
-            >&2 echo "Error: $tmpFilePath.pb.zip not found! (This is probably a programming error)"
+            >&2 echo "Error: $tmpFilePath.pb.$archiveExtension not found! (This is probably a programming error)"
             rm -r "$tmpFolder"
             exit 1
         fi

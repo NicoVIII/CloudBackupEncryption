@@ -87,15 +87,30 @@ do
     origFile="$(dirname "$j")"
     origFile="$outFolder${origFile#"$inFolder"}/$origFileName"
     mv "$tmpFolder/tmpfile" "$origFile"
-    if [ "$_arg_unpack" = "on" ] && [[ $origFileName = *.pb.zip ]]; then
-        folderName=${origFile::-7}
+    if [ "$_arg_unpack" = "on" ] && [[ $origFileName = *.pb.* ]]; then
+        if [[ $origFileName = *.pb.tar.* ]]; then
+            folderName=${origFile::-10}
+        else
+            folderName=${origFile::-7}
+        fi
         folderName=${folderName#"$outFolder"}
         folderName=${folderName#"/"}
-        if [[ "$origFile" = *backup.pb.zip ]]; then
+        if [[ "$origFile" = *backup.pb.* ]]; then
             folderName="."
         fi
 
-        command="unzip -q \"$origFile\" -d \"$outFolder/$folderName\""
+        mkdir -p "$outFolder/$folderName"
+        if [[ $origFileName = *.pb.tar.xz ]]; then
+            command="xz -d \"$origFile\""
+            origFile=${origFile::-3}
+            command+=" && tar -xf \"$origFile\" -C \"$outFolder/$folderName\""
+        elif [[ $origFileName = *.pb.tar.gz ]]; then
+            command="gzip -d \"$origFile\""
+            origFile=${origFile::-3}
+            command+=" && tar -xf \"$origFile\" -C \"$outFolder/$folderName\""
+        else
+            command="unzip -q \"$origFile\" -d \"$outFolder/$folderName\""
+        fi
         execute "$command"
         rm "$origFile"
     elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then

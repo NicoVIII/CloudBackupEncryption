@@ -36,23 +36,25 @@ These are the options and flags you can use with the files and insert into `encr
 ### encrypt
 
 `-a | --(no-)all` : include hidden files  
+`-c | --(no-)compression <compression>` : compression priority to use, available are: veryfast, fast, default, small, verysmall  
 `-d | --depth <depth>` : depth of zipping of directories - depth 0 is the zipping of all directories in the folder of the script - Have a look at [Examples](#Examples)  
 `-h | --help` : Prints help  
 `-n | --(no-)name-hashing` : hash filenames  
 `-o | --output <path>` : defines output folder  
 `-q | --(no-)quiet` : supresses all output and skips progress calculation  
 `-r | --recipient <email>` : defines which key(s) should be used for encryption  
-`-v | --version` : Prints version  
-`-V | --(no-)verbose` : Prints more information about what the script is doing
+`-v | --version` : prints version  
+`-V | --(no-)verbose` : prints more information about what the script is doing  
+`-z | --(no-)zip` : does not use tar, uses zip instead and skips compression
 
 ### decrypt
 
-`-h | --help` : Prints help  
+`-h | --help` : prints help  
 `-o | --output <path>` : defines output folder  
 `-q | --(no-)quiet`: supresses all output and skips progress calculation  
 `-u | --(no-)unpack` : unpacks all decrypted archives  
-`-v | --version` : Prints version  
-`-V | --(no-)verbose` : Prints more information about what the script is doing
+`-v | --version` : prints version  
+`-V | --(no-)verbose` : prints more information about what the script is doing
 
 ## Examples
 
@@ -136,7 +138,8 @@ The encrypted filestructure looks like this:
 1: Unspecific/Unidentified error
 2: Dependencies missing
 3: Target folder is already existing
-4: A path error happened. This is probably a programming error.
+4: A path error happened (This is probably a programming error)
+5: Invalid parameter given
 
 ## Development
 
