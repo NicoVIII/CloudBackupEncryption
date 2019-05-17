@@ -281,6 +281,9 @@ if dependencyMissing "basename"; then valid="off"; fi
 if dependencyMissing "rm"; then valid="off"; fi
 if dependencyMissing "mv"; then valid="off"; fi
 if dependencyMissing "cd"; then valid="off"; fi
+if dependencyMissing "tar"; then valid="off"; fi
+if dependencyMissing "xz"; then valid="off"; fi
+if dependencyMissing "gzip"; then valid="off"; fi
 if dependencyMissing "zip"; then valid="off"; fi
 
 if [ "$valid" = "off" ]; then

@@ -17,7 +17,7 @@ test-script:
   stage: test
   script:
     - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get -y install autoconf gpg grep gawk zip expect
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install autoconf gpg grep gawk zip expect xz-utils gzip
     # Import test key
     - gpg --import test/testkey.asc
     - expect -c "spawn gpg --edit-key FE742BC9828DCDB8 trust quit; send \"5\ry\r\"; expect eof"
