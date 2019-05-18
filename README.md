@@ -138,8 +138,9 @@ The encrypted filestructure looks like this:
 1: Unspecific/Unidentified error
 2: Dependencies missing
 3: Target folder is already existing
-4: A path error happened (This is probably a programming error)
-5: Invalid parameter given
+4: Invalid parameter given
+20: A path error happened (This is probably a programming error)
+21: The path to the file to encrypt is empty (This is probably a programming error)
 
 ## Development
 

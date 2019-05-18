@@ -53,7 +53,7 @@ else
         archiveExtension="$containerExtension.gz"
     else
         printLogN "Invalid compression priority given! Have a look at help to get valid values."
-        exit 5
+        exit 4
     fi
 fi
 
@@ -92,6 +92,11 @@ function encryptFile {
     local file=$1
     local path=$2
 
+    if [ "$file" = "" ]; then
+        printErrorN "File to encrypt is empty for some reason! (This is probably a programming error)"
+        exit 21
+    fi
+
     local command="gpg --batch --no-tty -q --output \"$path.gpg\" --encrypt"
     local i
     for i in ${_arg_recipient[@]}; do
@@ -113,7 +118,7 @@ function checkFiles {
     local i
     while read i
     do
-        if [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+        if [ "$i" != "" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
             local outFile="$outFolder/${i#"$inFolder"}.gpg"
             if [ ! -f "$outFile" ]; then
                 encryptFile "$i" "$outFolder${i#"$inFolder"}"
@@ -179,7 +184,7 @@ function handleDir {
 
         cd "$oldPath"
 
-        if [ $first = "on" ]; then
+        if [ "$first" = "on" ]; then
             path=$folderName
         fi
 

@@ -5,6 +5,7 @@ cp -R "deploy/." "./test/exampleDir/"
 
 setup() {
     cd "./test/exampleDir"
+    mkdir "./folder1/empty-folder" 2> /dev/null || :
 }
 
 teardown() {
@@ -301,6 +302,55 @@ function checkDecrypted {
     [ -f "../backup/folder1/file2.file.gpg" ]
     [ -f "../backup/folder1/folder2.tar.xz.gpg" ]
     [ -f "../backup/folder1/folder with spaces.tar.xz.gpg" ]
+
+    run "./pgpbackup-decrypt" -Vu -- "../backup"
+
+    log_on_failure
+
+    [ "$status" -eq 0 ]
+
+    # Check structure of decrypted files
+    [ -f "../decrypted/decrypt.sh" ]
+    [ -f "../decrypted/encrypt.sh" ]
+    [ -f "../decrypted/pgpbackup-decrypt" ]
+    [ -f "../decrypted/pgpbackup-encrypt" ]
+    [ -f "../decrypted/file1.file" ]
+    [ -f "../decrypted/file with spaces.file" ]
+    [ -f "../decrypted/folder1/file2.file" ]
+    [ -f "../decrypted/folder1/folder2/file3.file" ]
+    [ -f "../decrypted/folder1/folder with spaces/file4.file" ]
+    [ ! -f "../decrypted/.hidden.file" ]
+    [ ! -f "../decrypted/folder1/.hidden2.file" ]
+    [ ! -d "../decrypted/.hidden-folder" ]
+    [ ! -f "../decrypted/.hidden-folder/file5.file" ]
+    [ ! -f "../decrypted/.hidden-folder/.hidden3.file" ]
+
+    # Check content of decrypted files
+    [ "$(< "../decrypted/file with spaces.file")" = "file-with-spaces-content" ]
+    [ "$(< ../decrypted/file1.file)" = "file-one-content" ]
+    [ "$(< ../decrypted/folder1/file2.file)" = "file-two-content" ]
+    [ "$(< ../decrypted/folder1/folder2/file3.file)" = "file-three-content" ]
+    [ "$(< "../decrypted/folder1/folder with spaces/file4.file")" = "file-four-content" ]
+}
+
+@test "Invoke with depth 2 and compression fast" {
+    run "./pgpbackup-encrypt" -V -c fast -d 2 -r "$email"
+
+    log_on_failure
+
+    [ "$status" -eq 0 ]
+
+    # Check structure of encrypted files
+    [ ! -f "../backup/.hidden.file.gpg" ]
+    [ ! -f "../backup/folder1/.hidden2.file.gpg" ]
+    [ -f "../backup/decrypt.sh" ]
+    [ -f "../backup/pgpbackup-decrypt" ]
+    [ -f "../backup/encrypt.sh.gpg" ]
+    [ -f "../backup/pgpbackup-encrypt.gpg" ]
+    [ -f "../backup/file1.file.gpg" ]
+    [ -f "../backup/folder1/file2.file.gpg" ]
+    [ -f "../backup/folder1/folder2.tar.gz.gpg" ]
+    [ -f "../backup/folder1/folder with spaces.tar.gz.gpg" ]
 
     run "./pgpbackup-decrypt" -Vu -- "../backup"
 

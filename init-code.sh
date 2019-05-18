@@ -66,7 +66,7 @@ function printErrorN {
 function validifyLink {
     local path=$1
 
-    readlink -f "$path" || (printErrorN "$path could not be validified!" && exit 4)
+    readlink -f "$path" || (printErrorN "$path could not be validified!" && exit 20)
 }
 
 function validifyVirtualLink {
