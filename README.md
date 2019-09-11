@@ -134,13 +134,13 @@ The encrypted filestructure looks like this:
 
 ### Exit codes
 
-0: Everything went well
-1: Unspecific/Unidentified error
-2: Dependencies missing
-3: Target folder is already existing
-4: Invalid parameter given
-20: A path error happened (This is probably a programming error)
-21: The path to the file to encrypt is empty (This is probably a programming error)
+0: Everything went well  
+1: Unspecific/Unidentified error  
+2: Dependencies missing  
+3: Target folder is already existing  
+4: Invalid parameter given  
+20: A path error happened (This is probably a programming error)  
+21: The path to the file to encrypt is empty (This is probably a programming error)  
 
 ## Development
 
