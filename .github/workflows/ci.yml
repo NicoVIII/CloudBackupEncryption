@@ -8,10 +8,5 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Install missing library
-      run: |
-        apt-get update
-        apt-get -y install autoconf
     - name: Run build script
       run: ./build.sh
- 
