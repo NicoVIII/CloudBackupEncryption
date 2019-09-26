@@ -1,0 +1,22 @@
+name: Continuous Integration
+
+on: [push]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Update submodules
+      run: git submodule update --init --recursive
+    - name: Install expect
+      run: sudo apt-get install expect -y
+    - name: Run build script
+      run: ./build.sh
+    - name: Import test key
+      run: |
+        gpg --import test/testkey.asc
+        expect -c "spawn gpg --edit-key FE742BC9828DCDB8 trust quit; send \"5\ry\r\"; expect eof"
+    - name: Run test script
+      run: test/test.sh

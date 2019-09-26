@@ -7,68 +7,103 @@ libname="Encryption"
 version="__VERSION__"
 
 # ARG_POSITIONAL_DOUBLEDASH()
-# ARG_POSITIONAL_INF([emails], [emails to encrypt for], [1])
+# ARG_POSITIONAL_SINGLE([input], [Folder to encrypt], ["."])
+# ARG_OPTIONAL_SINGLE([compression], [c], [Used compression priority: veryfast, fast, default, small, verysmall], ["default"])
 # ARG_OPTIONAL_SINGLE([depth], [d], [Depth in which folders are packed], [-1])
+# ARG_OPTIONAL_SINGLE([output], [o], [Folder to store encrypted files], ["../backup"])
 # ARG_OPTIONAL_BOOLEAN([all],[a],[Includes also hidden files in backup])
-# ARG_OPTIONAL_BOOLEAN([hash-names],,[Hashes file and directory names (deprecated, use --name-hashing instead)],[on])
-# ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names],[on])
+# ARG_OPTIONAL_BOOLEAN([name-hashing],[n],[Hashes file and directory names])
+# ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
+# ARG_OPTIONAL_BOOLEAN([zip],[z],[Ignores compression and uses zip instead of tar])
+# ARG_OPTIONAL_REPEATED([recipient], [r], [recipients to encrypt for, is passed through to gpg encrypt command])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
-echo "$progname $version - $libname"
 
 depth=$_arg_depth
 
-# Determine which tmp folder to use
-if [ -d "../tmp" ]; then
-    for i in {1..9}
-    do
-        if [ ! -d "../tmp$i" ]; then
-            tmp="tmp$i"
-            break
-        fi
-    done
-else
-    tmp="tmp"
-fi
-readonly tmpFolder=$tmp
+#__INIT__
 
-# Delete old backup folder, if existing
-readonly backupFolder="backup"
-if [ -d "../$backupFolder" ]; then
-    if [ -f "../$backupFolder/decrypt.sh" ]; then
-        rm -r "../$backupFolder"
-        echo "Removed existing backup folder."
+# Determinate compression method
+compressionCmd=""
+if [ "$_arg_zip" = "on" ]; then
+    bundleCmd="zip -qur \"%s\" \"%s\""
+    containerExtension="zip"
+    archiveExtension="zip"
+else
+    bundleCmd="tar -rf \"%s\" \"%s\""
+    containerExtension="tar"
+    if [ "$_arg_compression" = "default" ]; then
+        compressionCmd="xz -2 \"%s\""
+        archiveExtension="$containerExtension.xz"
+    elif [ "$_arg_compression" = "small" ]; then
+        compressionCmd="xz -6 \"%s\""
+        archiveExtension="$containerExtension.xz"
+    elif [ "$_arg_compression" = "fast" ]; then
+        compressionCmd="gzip -6 \"%s\""
+        archiveExtension="$containerExtension.gz"
+    elif [ "$_arg_compression" = "verysmall" ]; then
+        compressionCmd="xz -9 \"%s\""
+        archiveExtension="$containerExtension.xz"
+    elif [ "$_arg_compression" = "veryfast" ]; then
+        compressionCmd="gzip -1 \"%s\""
+        archiveExtension="$containerExtension.gz"
     else
-        echo "The backup folder is already existing."
-        echo "Aborted."
-        exit 1
+        printLogN "Invalid compression priority given! Have a look at help to get valid values."
+        exit 4
     fi
 fi
 
+# Calculate size of files to encrypt
+if [ "$_arg_quiet" = "off" ]; then
+    printLogR "Precalculate file sizes for progressbar..."
+
+    findCommand="find \"$inFolder\""
+    if [ "$_arg_all" = "off" ]; then
+        findCommand+=" ! -path \"*/.*\""
+    fi
+    findCommand+=" ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" -type f"
+
+    sizeTmp=0
+    while read i
+    do
+        filesize=$(stat --printf="%s" "$i")
+        sizeTmp=$[sizeTmp + filesize]
+    done <<< $(eval "$findCommand")
+
+    readonly size=$sizeTmp
+
+    printLogN "Finished precalculation.                  "
+fi
+
 # Functions
+#__FUNCTIONS__
+
 function hashName {
     local fileName=$1
 
-    echo "${_arg_emails[0]}-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
+    echo "${_arg_recipient[0]}-$(basename "$fileName")" | shasum -a 256 | cut -f1 -d " "
 }
 
 function encryptFile {
     local file=$1
     local path=$2
 
-    local command="gpg -q --output \"../$backupFolder/$path.gpg\" --encrypt"
-    for i in ${_arg_emails[@]}; do
+    if [ "$file" = "" ]; then
+        printErrorN "File to encrypt is empty for some reason! (This is probably a programming error)"
+        exit 21
+    fi
+
+    local command="gpg --batch --no-tty -q --output \"$path.gpg\" --encrypt"
+    local i
+    for i in ${_arg_recipient[@]}; do
         command+=" --recipient \"$i\""
     done
     command+=" \"$file\""
-    if [ "$_arg_verbose" == "on" ]; then
-        echo "> $command"
-    fi
-    eval $command
+    execute "$command"
 }
 
 function checkFiles {
@@ -80,61 +115,94 @@ function checkFiles {
     fi
     findCommand+=" -type f"
 
-    eval $findCommand | while read i
+    local i
+    while read i
     do
-        if [ ! -f "../$backupFolder/$i.gpg" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
-            encryptFile "$i" "$i"
+        if [ "$i" != "" ] && [[ "$i" != *decrypt.sh ]] && [[ "$i" != *pgpbackup-decrypt ]]; then
+            local outFile="$outFolder/${i#"$inFolder"}.gpg"
+            if [ ! -f "$outFile" ]; then
+                encryptFile "$i" "$outFolder${i#"$inFolder"}"
+            fi
+
+            local filesize=$(stat --printf="%s" "$i")
+            addToProgress $[filesize]
         fi
-    done
+    done <<< $(eval "$findCommand")
 }
 
 function handleDir {
     local depth=$1
     local path=$2
+    local first=$3
 
     # Create necessary folders
-    if [ "$path" = "." ]; then
-        mkdir -p "../$backupFolder"
-        mkdir "../$tmpFolder"
-        cp "decrypt.sh" "../$backupFolder/decrypt.sh"
-        cp "pgpbackup-decrypt" "../$backupFolder/pgpbackup-decrypt" > /dev/null
+    if [ "$first" = "on" ]; then
+        mkdir -p "$outFolder"
+        cp "$inFolder/decrypt.sh" "$outFolder/decrypt.sh" 2> /dev/null
+        cp "$inFolder/pgpbackup-decrypt" "$outFolder/pgpbackup-decrypt" 2> /dev/null
     fi
 
     if [ $depth -eq 0 ]; then
-        local oldPath=$PWD
-        if [ "$path" = "." ]; then
+        if [ "$first" = "on" ]; then
             folderPath="."
             folderName="backup"
         else
-            cd "$path"
-            folderPath="$(dirname "$path")"
-            folderName="$(basename "$path")"
+            relPath=${path#"$inFolder/"}
+            folderPath="$(dirname "$relPath")"
+            folderName="$(basename "$relPath")"
         fi
 
-        findCommand="find \".\" -maxdepth 1 ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\""
-        if [ "$_arg_all" = false ]; then
-            findCommand+="! -path \"*/.*\""
-        fi
+        oldPath=$PWD
+        cd "$path"
 
-        eval $findCommand | while read i
+        findCommand="find \".\""
+        if [ "$_arg_all" = "off" ]; then
+            findCommand+=" ! -path \"*/.*\""
+        fi
+        findCommand+=" ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" -type f"
+
+        folderPathInTmp=$(validifyVirtualLink "$tmpFolder/$folderPath")
+        if [ ! -d "$folderPathInTmp" ]; then
+            mkdir "$folderPathInTmp"
+        fi
+        target="$folderPathInTmp/$folderName.pb.$containerExtension"
+        local zippedBytes=0
+        while read i
         do
-            command="zip -qur \"$oldPath/../$tmpFolder/$folderPath/$folderName.pb.zip\" \"./$i\""
-            if [ "$_arg_verbose" == "on" ]; then
-                echo "> $command"
-            fi
-            eval $command
-        done
+            command="$(printf "$bundleCmd" "$target" "${i#"$inFolder/"}")"
+            execute "$command"
+
+            local filesize=$(stat --printf="%s" "${i#"$inFolder/"}")
+            local half=$[filesize / 2]
+            addToProgress $half
+            zippedBytes=$[zippedBytes + filesize - half]
+        done <<< $(eval "$findCommand")
+
+        if [ ! "$compressionCmd" = "" ]; then
+            execute "$(printf "$compressionCmd" "$target")"
+        fi
+
         cd "$oldPath"
-        if [ "$path" == "." ]; then
+
+        if [ "$first" = "on" ]; then
             path=$folderName
         fi
-        if [ -f "../$tmpFolder/$path.pb.zip" ]; then
-            encryptFile "../$tmpFolder/$path.pb.zip" "$path.zip"
+
+        tmpFilePath=$(validifyLink "$tmpFolder/${path#"$inFolder/"}")
+        if [ -f "$tmpFilePath.pb.$archiveExtension" ]; then
+            encryptFile "$tmpFilePath.pb.$archiveExtension" "$outFolder/${path#"$inFolder/"}.$archiveExtension"
+            rm "$tmpFilePath.pb.$archiveExtension"
+
+            addToProgress $zippedBytes
+        else
+            >&2 echo "Error: $tmpFilePath.pb.$archiveExtension not found! (This is probably a programming error)"
+            rm -r "$tmpFolder"
+            exit 1
         fi
     else
-        if [ "$path" != "." ]; then
-            mkdir "../backup/$path"
-            mkdir "../$tmpFolder/$path"
+        if [ "$first" = "off" ]; then
+            mkdir "$outFolder/${path#"$inFolder"}"
+            mkdir "$tmpFolder/${path#"$inFolder"}"
         fi
 
         # Handle files in directory
@@ -147,12 +215,13 @@ function handleDir {
         fi
         findCommand+=" -type d"
 
-        eval $findCommand | while read i
+        local i
+        eval "$findCommand" | while read i
         do
             if [ $depth -gt 0 ]; then
-                handleDir $[$depth-1] "$i"
+                handleDir $[depth - 1] "$i" "off"
             elif [ $depth -lt 0 ]; then
-                handleDir $depth "$i"
+                handleDir $depth "$i" "off"
             fi
         done
     fi
@@ -177,7 +246,7 @@ function addSpacingToOverviewFile {
 function createOverviewFile {
     local path=$1
     local depth=$2
-    local overviewFile=$3
+    local overviewFile="$3"
 
     findCommand="find \"$path\" -mindepth 1 -maxdepth 1"
     if [ "$_arg_all" = "off" ]; then
@@ -185,6 +254,7 @@ function createOverviewFile {
     fi
 
     # Add files to overview file
+    local i
     eval "$findCommand -type f" | while read i
     do
         addSpacingToOverviewFile $depth 1 >> "$overviewFile"
@@ -197,6 +267,7 @@ function createOverviewFile {
     done
 
     # Add directories to overview file
+    local i
     eval "$findCommand -type d" | while read i
     do
         addSpacingToOverviewFile $depth 0 >> "$overviewFile"
@@ -205,33 +276,68 @@ function createOverviewFile {
     done
 }
 
-# Main code
-handleDir $depth $email .
+# Check dependencies
+valid="on"
+if dependencyMissing "find"; then valid="off"; fi
+if dependencyMissing "awk"; then valid="off"; fi
+if dependencyMissing "gpg"; then valid="off"; fi
+if dependencyMissing "dirname"; then valid="off"; fi
+if dependencyMissing "basename"; then valid="off"; fi
+if dependencyMissing "rm"; then valid="off"; fi
+if dependencyMissing "mv"; then valid="off"; fi
+if dependencyMissing "cd"; then valid="off"; fi
+if dependencyMissing "tar"; then valid="off"; fi
+if dependencyMissing "xz"; then valid="off"; fi
+if dependencyMissing "gzip"; then valid="off"; fi
+if dependencyMissing "zip"; then valid="off"; fi
 
-if [ "$_arg_name_hashing" = "on" ] && [ "$_arg_hash_names" = "on" ]; then
+if [ "$valid" = "off" ]; then
+    printLogN "Some dependencies are missing!"
+    printLogN "Aborted."
+    exit 2
+fi
+
+# Delete old backup folder, if existing
+if [ -d "$outFolder" ]; then
+    if [ -f "$outFolder/decrypt.sh" ]; then
+        rm -r "$outFolder"
+        printLogN "Removed existing backup folder."
+    else
+        printLogN "The backup folder is already existing."
+        printLogN "Aborted."
+        exit 3
+    fi
+fi
+
+handleDir $depth "$inFolder" "on"
+
+printLogN "Finished encrypting!"
+
+if [ "$_arg_name_hashing" = "on" ]; then
+    printLogR "Hash file and folder names..."
+
     # Create overview file
-    cd "../backup"
-    overviewFile="overview.txt"
-    createOverviewFile "." 0 "$overviewFile"
+    overviewFile="$outFolder/overview.txt"
+    createOverviewFile "$outFolder" 0 "$overviewFile"
 
     # Hash file names
-    find "." -depth -iname "*.gpg" -type f | while read i
+    find "$outFolder" -depth -iname "*.gpg" -type f | while read i
     do
         # Hash filename
         mv "$i" "$(dirname "$i")/$(hashName $(basename "$i")).gpg"
     done
 
     # Hash folder names
-    find "." -mindepth 1 -depth -type d | while read j
+    find "$outFolder" -mindepth 1 -depth -type d | while read j
     do
-        path=$(dirname "$j")
-        name=$(basename "$j")
-        hashedName=$(hashName "$name")
+        path="$(dirname "$j")"
+        name="$(basename "$j")"
+        hashedName="$(hashName "$name")"
         touch "$path/foldernames.txt"
         echo "$hashedName;$name" >> "$path/foldernames.txt"
         mv "$j" "$(dirname "$j")/$hashedName"
     done
-    find "." -type f -iname "foldernames.txt" | while read j
+    find "$outFolder" -type f -iname "foldernames.txt" | while read j
     do
         encryptFile "$j" "$j" 0
         rm "$j"
@@ -240,11 +346,12 @@ if [ "$_arg_name_hashing" = "on" ] && [ "$_arg_hash_names" = "on" ]; then
     # Encrypt overview file
     encryptFile "$overviewFile" "$overviewFile"
     rm "$overviewFile"
+
+    printLogN "Finished hashing!            "
 fi
 
 # Tidy up
-rm -r "../$tmpFolder"
+rm -r "$tmpFolder"
 
-echo "Finished encrypting!"
 exit 0
 # ] <-- needed because of Argbash

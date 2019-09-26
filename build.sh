@@ -1,5 +1,5 @@
 #!/bin/bash
-version="v0.2.1"
+version="v1.0.0"
 
 type=$1
 
@@ -11,6 +11,16 @@ cp pgpbackup-decrypt tmp/pgpbackup-decrypt
 cp pgpbackup-encrypt tmp/pgpbackup-encrypt
 
 sed -i "s/__VERSION__/$version/g" tmp/pgpbackup-*
+sed -i "/#__INIT__/ {
+    r init-code.sh
+    d
+}" tmp/pgpbackup-*
+sed -i "/#__FUNCTIONS__/ {
+    r helper-functions.sh
+    d
+}" tmp/pgpbackup-*
+sed -i "s_#!/bin/bash__g" tmp/pgpbackup-*
+sed -i '1s;^;#!/bin/bash\n;' tmp/pgpbackup-*
 
 echo "Run argbash to build parameter support."
 ./argbash/bin/argbash tmp/pgpbackup-decrypt -o tmp/pgpbackup-decrypt
@@ -49,4 +59,25 @@ fi
 # Clean up
 rm -r "tmp"
 echo "Finished."
-exit 0
+
+# Test
+if [ "$type" == "test" ]; then
+    echo
+    echo "Test, if build was successful."
+    error=0
+    if [ ! -f "./deploy/pgpbackup-encrypt" ]; then
+        echo "Error: Did not find 'deploy/pgpbackup-encrypt!"
+        error=1
+    else
+        echo "Found 'deploy/pgpbackup-encrypt'."
+    fi
+    if [ ! -f "./deploy/pgpbackup-decrypt" ]; then
+        echo "Error: Did not find 'deploy/pgpbackup-decrypt!"
+        error=1
+    else
+        echo "Found 'deploy/pgpbackup-decrypt'."
+    fi
+    exit $error
+else
+    exit 0
+fi

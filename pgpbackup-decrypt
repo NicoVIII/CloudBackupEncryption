@@ -6,93 +6,127 @@ progname="PGP-Backup"
 libname="Decryption"
 version="__VERSION__"
 
+# ARG_POSITIONAL_DOUBLEDASH()
+# ARG_POSITIONAL_SINGLE([input], [Folder to decrypt], ["."])
+# ARG_OPTIONAL_SINGLE([output], [o], [Folder to store decrypted files], ["../decrypted"])
 # ARG_OPTIONAL_BOOLEAN([unpack],[u],[Unpacks all archives from pgpbackup-encrypt])
 # ARG_OPTIONAL_BOOLEAN([verbose],[V],[Prints more information about what the script is doing])
+# ARG_OPTIONAL_BOOLEAN([quiet],[q],[Supresses all output, overwrites verbose parameter])
 # ARG_HELP([short program description (optional)],[long program description (optional)])
 # ARG_VERSION([echo $version])
 # ARGBASH_GO()
 
 # [ <-- needed because of Argbash
 
-echo "$progname $version - $libname"
+#__INIT__
 
-# Determine which tmp folder to use
-if [ -d "../tmp" ]; then
-    for i in {1..9}
+# Calculate size of files to decrypt
+if [ "$_arg_quiet" = "off" ]; then
+    printLogR "Precalculate file sizes for progressbar..."
+
+    findCommand="find \"$inFolder\""
+    if [ "$_arg_all" = "off" ]; then
+        findCommand+=" ! -path \"*/.*\""
+    fi
+    findCommand+=" ! -name \".\" ! -name \"decrypt.sh\" ! -name \"pgpbackup-decrypt\" -type f"
+
+    sizeTmp=0
+    while read i
     do
-        if [ ! -d "../tmp$i" ]; then
-            tmp="tmp$i"
-            break
-        fi
-    done
-else
-    tmp="tmp"
+        filesize=$(stat --printf="%s" "$i")
+        sizeTmp=$[sizeTmp + filesize]
+    done <<< $(eval $findCommand)
+
+    readonly size=$sizeTmp
+
+    printLogN "Finished precalculation.                  "
 fi
-readonly tmpFolder=$tmp
+
+# Functions
+#__FUNCTIONS__
+
+# Check dependencies
+valid="on"
+if dependencyMissing "find"; then valid="off"; fi
+if dependencyMissing "cut"; then valid="off"; fi
+if dependencyMissing "awk"; then valid="off"; fi
+if dependencyMissing "gpg"; then valid="off"; fi
+if dependencyMissing "dirname"; then valid="off"; fi
+if dependencyMissing "basename"; then valid="off"; fi
+if dependencyMissing "rm"; then valid="off"; fi
+if dependencyMissing "mv"; then valid="off"; fi
+if dependencyMissing "cd"; then valid="off"; fi
+if dependencyMissing "tar"; then valid="off"; fi
+if dependencyMissing "xz"; then valid="off"; fi
+if dependencyMissing "gzip"; then valid="off"; fi
+if dependencyMissing "unzip"; then valid="off"; fi
+
+if [ "$valid" = "off" ]; then
+    printLogN "Some dependencies are missing!"
+    printLogN "Aborted."
+    exit 2
+fi
 
 # Check if decrypted folder exists
-readonly decryptFolder="decrypted"
-if [ -d "../$decryptFolder" ]; then
-    echo "The decrypt folder is already existing."
-    echo "Aborted."
-    exit 1
+if [ -d "$outFolder" ]; then
+    printLogN "The decrypt folder is already existing."
+    printLogN "Aborted."
+    exit 3
 fi
 
-function decrypt {
-    local path=$1
+# Create out structure
+mkdir -p "$outFolder"
 
-    find "$path" -maxdepth 1 -type f -iname "*.gpg" | while read j
-    do
-        oldPath=$PWD
-        cd "../$tmpFolder"
-        command="gpg -q --status-fd 1 --use-embedded-filename \"$oldPath/$j\""
-        if [ "$_arg_verbose" == "on" ]; then
-            echo "> $command"
-        fi
-        origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
-        origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
-        origFile="$(dirname "$j")/$origFileName"
-        mv "$origFileName" "../$decryptFolder/$origFile"
-        if [ "$_arg_unpack" = "on" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "../$decryptFolder"
-            folderName=${origFile::-7}
-            if [[ "$origFile" = *backup.pb.zip ]]; then
-                folderName="."
-            fi
-            command="unzip -q \"$origFile\" -d \"$folderName\""
-            if [ "$_arg_verbose" == "on" ]; then
-                echo "> $command"
-            fi
-            eval $command
-            rm "$origFile"
-        elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
-            cd "../$decryptFolder"
-            folderName=${origFile::-7}
-            mv "$origFile" "$folderName.zip"
-        fi
-        cd "$oldPath"
-    done
-
-    find "$path" -mindepth 1 -maxdepth 1 -type d | while read j
-    do
-        decrypt "$j"
-    done
-}
-
-mkdir "../$tmpFolder"
-mkdir "../$decryptFolder"
-
-find . -depth ! -path . -type d | while read i
+find "$inFolder" -depth ! -path . -type d | while read i
 do
-    mkdir -p "../$decryptFolder/$i"
+    mkdir -p "$outFolder${i#"$inFolder"}"
 done
 
-decrypt "."
+find "$inFolder" -type f -iname "*.gpg" | while read j
+do
+    command="gpg --batch --no-tty -q --status-fd 1 --use-embedded-filename --output \"$tmpFolder/tmpfile\" \"$j\""
+    origFileName=$(eval "$command" | grep -E '^\[GNUPG:\] PLAINTEXT 62 [[:digit:]]+ .*$' | cut -f 5 -d " ")
+    origFileName=$(echo  "$origFileName" | awk -niord '{printf RT?$0chr("0x"substr(RT,2)):$0}' RS=%..)
+    origFile="$(dirname "$j")"
+    origFile="$outFolder${origFile#"$inFolder"}/$origFileName"
+    mv "$tmpFolder/tmpfile" "$origFile"
+    if [ "$_arg_unpack" = "on" ] && [[ $origFileName = *.pb.* ]]; then
+        if [[ $origFileName = *.pb.tar.* ]]; then
+            folderName=${origFile::-10}
+        else
+            folderName=${origFile::-7}
+        fi
+        folderName=${folderName#"$outFolder"}
+        folderName=${folderName#"/"}
+        if [[ "$origFile" = *backup.pb.* ]]; then
+            folderName="."
+        fi
+
+        mkdir -p "$outFolder/$folderName"
+        if [[ $origFileName = *.pb.tar.xz ]]; then
+            command="xz -d \"$origFile\""
+            origFile=${origFile::-3}
+            command+=" && tar -xf \"$origFile\" -C \"$outFolder/$folderName\""
+        elif [[ $origFileName = *.pb.tar.gz ]]; then
+            command="gzip -d \"$origFile\""
+            origFile=${origFile::-3}
+            command+=" && tar -xf \"$origFile\" -C \"$outFolder/$folderName\""
+        else
+            command="unzip -q \"$origFile\" -d \"$outFolder/$folderName\""
+        fi
+        execute "$command"
+        rm "$origFile"
+    elif [ "$_arg_unpack" = "off" ] && [[ $origFile = *.pb.zip ]]; then
+        folderName=${origFile::-7}
+        mv "$origFile" "$folderName.zip"
+    fi
+
+    filesize=$(stat --printf="%s" "$j")
+    addToProgress $[filesize]
+done
 
 # Restore folder names
-oldPath=$PWD
-cd "../$decryptFolder"
-find "." -mindepth 1 -depth -type d | while read j
+find "$outFolder" -mindepth 1 -depth -type d | while read j
 do
     path=$(dirname "$j")
     hashedName=$(basename "$j")
@@ -105,18 +139,18 @@ do
     fi
 done
 
-find "." -type f -iname "foldernames.txt" | while read j
+find "$outFolder" -type f -iname "foldernames.txt" | while read j
 do
     rm "$j"
 done
 
 # Copy decrypt stuff to decrypted folder
-cp "$oldPath/decrypt.sh" "decrypt.sh"
-cp "$oldPath/pgpbackup-decrypt" "pgpbackup-decrypt" > /dev/null
+cp "$inFolder/decrypt.sh" "$outFolder/decrypt.sh" 2> /dev/null
+cp "$inFolder/pgpbackup-decrypt" "$outFolder/pgpbackup-decrypt" 2> /dev/null
 
 # Tidy up
-rm -r "../$tmpFolder"
+rm -r "$tmpFolder"
 
-echo "Finished decrypting!"
+printLogN "Finished decrypting!"
 exit 0
 # ] <-- needed because of Argbash

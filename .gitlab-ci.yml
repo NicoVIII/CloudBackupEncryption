@@ -1,0 +1,26 @@
+image: ubuntu:latest
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+  - test
+
+build-script:
+  stage: build
+  script:
+    - apt-get update
+    - apt-get -y install autoconf
+    - ./build.sh test
+
+test-script:
+  stage: test
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get -y install autoconf gpg grep gawk zip expect xz-utils gzip
+    # Import test key
+    - gpg --import test/testkey.asc
+    - expect -c "spawn gpg --edit-key FE742BC9828DCDB8 trust quit; send \"5\ry\r\"; expect eof"
+    # Testing
+    - ./build.sh
+    - test/test.sh
