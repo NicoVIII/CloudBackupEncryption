@@ -11,7 +11,7 @@ jobs:
     - name: Update submodules
       run: git submodule update --init --recursive
     - name: Install expect
-      run: sudo apt install expect -y
+      run: sudo apt-get install expect -y
     - name: Run build script
       run: ./build.sh
     - name: Import test key
